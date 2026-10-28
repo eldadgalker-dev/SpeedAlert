@@ -16,18 +16,20 @@ import kotlin.math.ceil
  */
 class CameraWatcher(
     cameras: List<Camera>,
-    private val penalties: Penalties,
+    penalties: Penalties,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private class State(var stage: Int, var lastDist: Double, var announced: Boolean = false, var closing: Boolean = false)
 
     @Volatile private var cameras: List<Camera> = cameras
+    @Volatile private var penalties: Penalties = penalties
     private val states = mutableMapOf<Long, State>()
     private var lastAlertAt = Long.MIN_VALUE / 2
 
-    /** Replaces the database (hourly update) without losing what was announced. */
-    fun replaceCameras(newCameras: List<Camera>) {
+    /** Replaces the tables (data update from GitHub) without losing what was announced. */
+    fun replaceTables(newCameras: List<Camera>, newPenalties: Penalties) {
         cameras = newCameras
+        penalties = newPenalties
     }
 
     fun onLocation(lat: Double, lon: Double, speedKmh: Double, heading: Double?): String? {

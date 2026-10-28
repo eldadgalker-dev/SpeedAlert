@@ -1,5 +1,5 @@
 {
-  "note": "Fines (NIS) by km/h over the limit. Fines VERIFIED 2026-10-28 against צו התעבורה (עבירות קנס), תשס\"ב-2002, consolidated text as of 01-09-2026, items 75-78א (regulation 54(א)): https://www.nevo.co.il/law_html/law00/70383.htm . Above 40 km/h (urban) / 50 km/h (interurban) there is no fine in the order: court summons. Points (0/8/10) NOT yet verified against the points table (תקנות התעבורה, חלק ז').",
+  "note": "Fines (NIS) by km/h over the limit. Fines VERIFIED 2026-10-28 against צו התעבורה (עבירות קנס), תשס\"ב-2002, consolidated text as of 01-09-2026, items 75-78א (regulation 54(א)): https://www.nevo.co.il/law_html/law00/70383.htm . Above 40 km/h (urban) / 50 km/h (interurban) there is no fine in the order: court summons. Points VERIFIED 2026-10-28 against the points table of תקנות התעבורה, תשכ\"א-1961 (points schedule, entries for regulation 54(א)): https://www.nevo.co.il/law_html/law01/p230_011.htm . 8 points: over 20 up to 30 km/h urban, over 25 up to 40 km/h interurban; 10 points: over 30 km/h urban, over 40 km/h interurban; up to 20/25 km/h is not in the table (0 points).",
   "urban": [
     {
       "from": 1,

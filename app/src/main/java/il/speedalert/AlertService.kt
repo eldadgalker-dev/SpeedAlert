@@ -15,6 +15,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.speech.tts.TextToSpeech
@@ -56,6 +57,24 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         running = true
         status = "פועל. ${cameras.size} מצלמות במאגר."
         startLocation()
+        main.post(dataCheck)
+    }
+
+    private val main = Handler(Looper.getMainLooper())
+
+    /** Checks GitHub for newer camera data now and every [DataUpdate.INTERVAL_MS] while running. */
+    private val dataCheck = object : Runnable {
+        override fun run() {
+            Thread {
+                val changed = runCatching { DataUpdate.run(this@AlertService) }.getOrDefault(false)
+                if (changed) {
+                    val cams = Database.cameras(this@AlertService)
+                    watcher.replaceTables(cams, Database.penalties(this@AlertService))
+                    dataInfo = "מאגר עודכן: ${cams.size} מצלמות (${Database.fetched(this@AlertService)})"
+                }
+            }.start()
+            main.postDelayed(this, DataUpdate.INTERVAL_MS)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -66,6 +85,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     }
 
     override fun onDestroy() {
+        main.removeCallbacks(dataCheck)
         fused.removeLocationUpdates(callback)
         tts.shutdown()
         restoreVolume()
@@ -161,6 +181,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         @Volatile var running = false
         @Volatile var status = "מופסק"
         @Volatile var lastAlert = ""
+        @Volatile var dataInfo = ""
 
         fun start(ctx: Context, action: String? = null) =
             ContextCompat.startForegroundService(ctx, Intent(ctx, AlertService::class.java).setAction(action))

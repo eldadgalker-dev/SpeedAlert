@@ -16,13 +16,16 @@ import android.widget.TextView
 class MainActivity : Activity() {
     private lateinit var statusView: TextView
     private lateinit var alertView: TextView
+    private lateinit var infoView: TextView
     private lateinit var toggle: Button
     private var afterGrant: (() -> Unit)? = null
+    private var updateText = ""
     private val ui = Handler(Looper.getMainLooper())
     private val refresh = object : Runnable {
         override fun run() {
             statusView.text = AlertService.status
             alertView.text = AlertService.lastAlert
+            infoView.text = listOf(AlertService.dataInfo, updateText).filter { it.isNotEmpty() }.joinToString("\n")
             toggle.text = getString(if (AlertService.running) R.string.stop else R.string.start)
             ui.postDelayed(this, 1000)
         }
@@ -33,10 +36,15 @@ class MainActivity : Activity() {
         val pad = (24 * resources.displayMetrics.density).toInt()
         statusView = TextView(this).apply { textSize = 20f; gravity = Gravity.CENTER }
         alertView = TextView(this).apply { textSize = 18f; gravity = Gravity.CENTER; setPadding(0, pad, 0, pad) }
+        infoView = TextView(this).apply { textSize = 14f; gravity = Gravity.CENTER; setPadding(0, pad, 0, 0) }
         toggle = Button(this).apply { textSize = 22f; setOnClickListener { onToggle() } }
         val test = Button(this).apply {
             setText(R.string.test_voice)
             setOnClickListener { withPermissions { AlertService.start(this@MainActivity, AlertService.ACTION_TEST) } }
+        }
+        val update = Button(this).apply {
+            setText(R.string.check_update)
+            setOnClickListener { checkAppUpdate() }
         }
         setContentView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -47,7 +55,46 @@ class MainActivity : Activity() {
             addView(alertView)
             addView(toggle)
             addView(test)
+            addView(update)
+            addView(infoView)
         })
+        checkDataAtLaunch()
+    }
+
+    /** Launch-time data check; while the service runs it repeats every 30 minutes. */
+    private fun checkDataAtLaunch() {
+        if (AlertService.running) return
+        Thread {
+            AlertService.dataInfo = runCatching {
+                val changed = DataUpdate.run(this)
+                val n = Database.cameras(this).size
+                (if (changed) "מאגר עודכן: " else "מאגר עדכני: ") + "$n מצלמות (${Database.fetched(this)})"
+            }.getOrElse { "בדיקת מאגר נכשלה, בשימוש המאגר הקיים (${Database.fetched(this)})" }
+        }.start()
+    }
+
+    private fun checkAppUpdate() {
+        if (!AppUpdate.canInstall(this)) {
+            updateText = getString(R.string.update_allow)
+            startActivity(AppUpdate.unknownSourcesIntent(this))
+            return
+        }
+        updateText = getString(R.string.update_checking)
+        Thread {
+            updateText = try {
+                val remote = AppUpdate.check()
+                if (remote == null) {
+                    getString(R.string.update_none, BuildConfig.VERSION_NAME)
+                } else {
+                    updateText = getString(R.string.update_downloading, remote.versionName)
+                    val apk = AppUpdate.download(this, remote)
+                    startActivity(AppUpdate.installIntent(this, apk))
+                    ""
+                }
+            } catch (e: Exception) {
+                getString(R.string.update_failed, e.message ?: e.javaClass.simpleName)
+            }
+        }.start()
     }
 
     override fun onResume() {

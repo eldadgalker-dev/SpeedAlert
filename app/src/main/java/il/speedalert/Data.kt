@@ -35,9 +35,20 @@ class Penalties(private val urban: List<Band>, private val interurban: List<Band
     }
 }
 
+/**
+ * Camera and penalty tables. The newest valid copy downloaded from GitHub (filesDir) wins;
+ * the copy packed into the APK (assets) is the fallback.
+ */
 object Database {
-    fun cameras(ctx: Context): List<Camera> {
-        val a = JSONObject(asset(ctx, "cameras.json")).getJSONArray("cameras")
+    const val CAMERAS = "cameras.json"
+    const val PENALTIES = "penalties.json"
+
+    fun cameras(ctx: Context): List<Camera> = parseCameras(read(ctx, CAMERAS))
+
+    fun penalties(ctx: Context) = Penalties.parse(read(ctx, PENALTIES))
+
+    fun parseCameras(json: String): List<Camera> {
+        val a = JSONObject(json).getJSONArray("cameras")
         return (0 until a.length()).map { i ->
             val c = a.getJSONObject(i)
             Camera(
@@ -51,8 +62,12 @@ object Database {
         }
     }
 
-    fun penalties(ctx: Context) = Penalties.parse(asset(ctx, "penalties.json"))
+    /** Date of the data in use ("fetched" field), for the status line. */
+    fun fetched(ctx: Context): String = JSONObject(read(ctx, CAMERAS)).optString("fetched", "?")
 
-    private fun asset(ctx: Context, name: String) =
-        ctx.assets.open(name).bufferedReader(Charsets.UTF_8).use { it.readText() }
+    fun read(ctx: Context, name: String): String {
+        val local = java.io.File(ctx.filesDir, name)
+        if (local.isFile) runCatching { return local.readText(Charsets.UTF_8) }
+        return ctx.assets.open(name).bufferedReader(Charsets.UTF_8).use { it.readText() }
+    }
 }

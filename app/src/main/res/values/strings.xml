@@ -6,4 +6,10 @@
     <string name="test_voice">בדיקת קול</string>
     <string name="channel_name">התראות מצלמות</string>
     <string name="running">פועל: מחפש מצלמות בדרך</string>
+    <string name="check_update">בדוק עדכון גרסה</string>
+    <string name="update_checking">בודק עדכון…</string>
+    <string name="update_none">מותקנת הגרסה העדכנית (%1$s)</string>
+    <string name="update_downloading">מוריד גרסה %1$s…</string>
+    <string name="update_allow">יש לאשר התקנה מהאפליקציה הזו, ואז ללחוץ שוב</string>
+    <string name="update_failed">בדיקת העדכון נכשלה: %1$s</string>
 </resources>

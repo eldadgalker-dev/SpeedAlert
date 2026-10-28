@@ -1,0 +1,122 @@
+# Builds a signed release APK when app code reaches main (or on manual run), creates tag
+# v<speed.versionBase>.<run number> and publishes a GitHub Release with SpeedAlert.apk and
+# version.json, which the in-app update button reads. Unit tests run first and block a failing build.
+# Requires four repository secrets: SPEED_KEYSTORE_B64, SPEED_KEYSTORE_PASSWORD, SPEED_KEY_ALIAS, SPEED_KEY_PASSWORD.
+name: release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - "settings.gradle.kts"
+      - "gradle.properties"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'   # a manual run on another branch must never publish a Release
+    runs-on: ubuntu-24.04   # pinned: ubuntu-latest moves to a new image in Oct 2026
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false   # the write token is passed only to the step that publishes (GH_TOKEN)
+
+      - name: Check signing secrets
+        env:
+          KEYSTORE_B64: ${{ secrets.SPEED_KEYSTORE_B64 }}
+          STORE_PASSWORD: ${{ secrets.SPEED_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SPEED_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SPEED_KEY_PASSWORD }}
+        run: |
+          missing=""
+          [ -z "$KEYSTORE_B64" ] && missing="$missing SPEED_KEYSTORE_B64"
+          [ -z "$STORE_PASSWORD" ] && missing="$missing SPEED_KEYSTORE_PASSWORD"
+          [ -z "$KEY_ALIAS" ] && missing="$missing SPEED_KEY_ALIAS"
+          [ -z "$KEY_PASSWORD" ] && missing="$missing SPEED_KEY_PASSWORD"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing signing secrets:$missing. Add them under the repository Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Compute version
+        id: ver
+        run: |
+          BASE=$(grep -E '^speed.versionBase=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')
+          if ! echo "$BASE" | grep -Eq '^[0-9]+\.[0-9]+$'; then echo "::error::speed.versionBase must be MAJOR.MINOR"; exit 1; fi
+          VERSION="$BASE.${{ github.run_number }}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Release version: $VERSION (versionCode ${{ github.run_number }})"
+
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # GitHub Ubuntu runners ship an Android SDK (ANDROID_HOME). The separate setup action
+      # failed in run #2, so it now runs only when no SDK is present on the runner.
+      - name: Detect Android SDK
+        id: sdk
+        run: |
+          if [ -n "$ANDROID_HOME" ] && [ -d "$ANDROID_HOME" ]; then
+            echo "Android SDK found at $ANDROID_HOME"
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No preinstalled Android SDK"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Android SDK (fallback)
+        if: steps.sdk.outputs.present != 'true'
+        uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+
+      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4
+
+      # Gate: a failing unit test stops the run here, before the keystore is decoded and before any Release is created.
+      - name: Unit tests
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
+      - name: Decode signing keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.SPEED_KEYSTORE_B64 }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "SPEED_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
+      - name: Build release APK
+        env:
+          SPEED_KEYSTORE_PASSWORD: ${{ secrets.SPEED_KEYSTORE_PASSWORD }}
+          SPEED_KEY_ALIAS: ${{ secrets.SPEED_KEY_ALIAS }}
+          SPEED_KEY_PASSWORD: ${{ secrets.SPEED_KEY_PASSWORD }}
+        run: |
+          ./gradlew :app:assembleRelease \
+            -PversionCode=${{ github.run_number }} \
+            -PversionName="${{ steps.ver.outputs.version }}"
+
+      - name: Package release assets
+        run: |
+          APK=app/build/outputs/apk/release/app-release.apk
+          if [ ! -f "$APK" ]; then echo "::error::Signed APK not found"; exit 1; fi
+          cp "$APK" SpeedAlert.apk
+          SHA=$(sha256sum SpeedAlert.apk | cut -d' ' -f1)
+          printf '{"versionCode": %d, "versionName": "%s", "sha256": "%s"}\n' \
+            "${{ github.run_number }}" "${{ steps.ver.outputs.version }}" "$SHA" > version.json
+          cat version.json
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${{ steps.ver.outputs.version }}"
+          gh release create "$TAG" SpeedAlert.apk version.json \
+            --target "$GITHUB_SHA" --title "SpeedAlert ${{ steps.ver.outputs.version }}" --generate-notes

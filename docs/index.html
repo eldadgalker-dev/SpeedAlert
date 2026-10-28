@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpeedAlert - התקנה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #ffffff; --fg: #1d1d1f; --muted: #5f6368; --accent: #c62828; --card: #f5f5f7; --line: #e0e0e0; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121212; --fg: #ececec; --muted: #a0a0a0; --accent: #ef5350; --card: #1e1e1e; --line: #333; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: Heebo, "Noto Sans Hebrew", Arial, sans-serif;
+         line-height: 1.7; letter-spacing: normal; }
+  main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { margin: 0 0 4px; font-size: 1.9rem; }
+  h2 { margin-top: 2rem; font-size: 1.3rem; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+  p.lead { color: var(--muted); margin-top: 0; }
+  .btn { display: inline-block; background: var(--accent); color: #fff; text-decoration: none; font-weight: 700;
+         padding: 14px 24px; border-radius: 10px; font-size: 1.15rem; margin: 12px 0; }
+  .note { background: var(--card); border-inline-start: 4px solid var(--accent); padding: 12px 16px; border-radius: 6px; }
+  ol, ul { padding-inline-start: 1.4rem; }
+  li { margin-bottom: 6px; }
+  code, .en { font-family: Consolas, monospace; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>SpeedAlert</h1>
+  <p class="lead">התראה קולית בעברית בהתקרבות למצלמת מהירות: מרחק, כמה להאט, קנס ונקודות.</p>
+
+  <a class="btn" href="https://github.com/eldadgalker-dev/SpeedAlert/releases/latest/download/SpeedAlert.apk">הורדת האפליקציה (<span lang="en" dir="ltr">APK</span>)</a>
+
+  <h2>התקנה ראשונה</h2>
+  <ol>
+    <li>לחץ על כפתור ההורדה בטלפון. הדפדפן עשוי להזהיר שהקובץ עלול להזיק: בחר "הורד בכל זאת".</li>
+    <li>פתח את הקובץ שהורד. אם מופיעה בקשה, אשר לדפדפן "להתקין אפליקציות ממקורות לא ידועים".</li>
+    <li>אם <span lang="en" dir="ltr">Google Play Protect</span> מציג "אפליקציה לא מוכרת", בחר "פרטים נוספים" ואז "התקן בכל זאת". האפליקציה לא מופצת בחנות ולכן אינה מוכרת ל-<span lang="en" dir="ltr">Play Protect</span>.</li>
+    <li>ודא שיש קול עברי: הגדרות ← המרת טקסט לדיבור ← שירותי הדיבור של <span lang="en" dir="ltr">Google</span> ← עברית.</li>
+    <li>פתח את SpeedAlert, לחץ "בדיקת קול", ואז "הפעל התראות". אשר מיקום מדויק והתראות.</li>
+    <li>מומלץ: הגדרות ← אפליקציות ← SpeedAlert ← סוללה ← "ללא הגבלה", כדי שהשירות לא ייעצר בנסיעה ארוכה.</li>
+  </ol>
+
+  <h2>שימוש</h2>
+  <ul>
+    <li>האפליקציה עוקבת אחרי המיקום, המהירות והכיוון פעם בשנייה, ופועלת ברקע עם התראה קבועה.</li>
+    <li>מ-500 מטר לפני מצלמה שבכיוון הנסיעה נשמעת התראה בעוצמה מלאה. ב-200 מטר נשמעת התראה שנייה רק אם המהירות עדיין גבוהה מהמותר.</li>
+    <li>בזמן ההתראה מוזיקה וניווט מונמכים, ועוצמת המדיה חוזרת לקדמותה בסיום.</li>
+    <li>אחרי שעוברים מצלמה היא שותקת עד שמתרחקים ממנה יותר מקילומטר.</li>
+  </ul>
+
+  <h2>עדכון מאגר המצלמות</h2>
+  <p>המאגר מתעדכן אוטומטית: שרת <span lang="en" dir="ltr">GitHub</span> בודק פעם בשעה אם יש שינוי במיקומי המצלמות, והאפליקציה מורידה את המאגר בהפעלה ופעם בחצי שעה בזמן שההתראות פועלות. אין צורך להתקין גרסה חדשה בשביל נתונים חדשים.</p>
+
+  <h2>עדכון גרסת האפליקציה</h2>
+  <ol>
+    <li>במסך הראשי לחץ "בדוק עדכון גרסה".</li>
+    <li>בפעם הראשונה תתבקש לאשר ל-SpeedAlert להתקין אפליקציות. אשר, חזור ולחץ שוב.</li>
+    <li>אם יש גרסה חדשה, היא תורד, תיבדק (חתימת <span lang="en" dir="ltr">SHA-256</span>) ומסך ההתקנה ייפתח.</li>
+  </ol>
+
+  <h2>פתרון בעיות</h2>
+  <ul>
+    <li>אין קול, או קול באנגלית: התקן קול עברי (סעיף 4 בהתקנה) ולחץ "בדיקת קול".</li>
+    <li>ההתראות נעצרות אחרי זמן: בטל את חיסכון הסוללה לאפליקציה (סעיף 6).</li>
+    <li>"נדרשת הרשאת מיקום מדויק": הגדרות ← אפליקציות ← SpeedAlert ← הרשאות ← מיקום ← "מיקום מדויק".</li>
+    <li>ההתקנה של עדכון נכשלת עם הודעת חתימה: הסר את הגרסה הקיימת והתקן מחדש מהכפתור למעלה.</li>
+  </ul>
+
+  <h2>מגבלות</h2>
+  <div class="note">
+    <ul>
+      <li>מיקומי המצלמות לקוחים מ-<span lang="en" dir="ltr">OpenStreetMap</span> והכיסוי חלקי. מצלמה שלא במאגר לא תתריע.</li>
+      <li>מצלמות ממוצע מהירות (קטע) ומצלמות רמזור אינן מטופלות בנפרד.</li>
+      <li>הקנסות והנקודות נבדקו מול צו התעבורה (עבירות קנס) ותקנות התעבורה בנוסח של ספטמבר 2026. האפליקציה אינה ייעוץ משפטי, והאחריות לנהיגה בהתאם לתמרורים היא של הנהג.</li>
+      <li>האפליקציה אינה שולחת מיקום או מידע לשום שרת. היא רק מורידה את המאגר ואת קובץ הגרסה מ-<span lang="en" dir="ltr">GitHub</span>.</li>
+    </ul>
+  </div>
+
+  <footer>נתוני מפה: <span lang="en" dir="ltr">© OpenStreetMap contributors, ODbL</span>. קוד המקור: <a href="https://github.com/eldadgalker-dev/SpeedAlert"><span lang="en" dir="ltr">github.com/eldadgalker-dev/SpeedAlert</span></a></footer>
+</main>
+</body>
+</html>
