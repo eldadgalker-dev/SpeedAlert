@@ -1,0 +1,1827 @@
+{
+ "source": "OpenStreetMap contributors (ODbL), via Overpass API",
+ "fetched": "2026-10-28",
+ "count": 182,
+ "cameras": [
+  {
+   "id": 452459007,
+   "lat": 32.274498,
+   "lon": 34.853364,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 483308369,
+   "lat": 31.924641,
+   "lon": 35.885416,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": "السرعة 70"
+  },
+  {
+   "id": 716763677,
+   "lat": 31.909789,
+   "lon": 34.804824,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 1096560968,
+   "lat": 31.246333,
+   "lon": 34.783101,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 1096560969,
+   "lat": 31.251019,
+   "lon": 34.7985,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 1096560973,
+   "lat": 31.243609,
+   "lon": 34.793704,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 1096560976,
+   "lat": 31.257051,
+   "lon": 34.75873,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 1096568599,
+   "lat": 31.372263,
+   "lon": 34.793837,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 1096568601,
+   "lat": 31.31134,
+   "lon": 34.788219,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 1096568607,
+   "lat": 31.331135,
+   "lon": 34.697774,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 1096580981,
+   "lat": 31.596557,
+   "lon": 34.755193,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 1104342777,
+   "lat": 32.257298,
+   "lon": 34.891681,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": "Camera traffic signals"
+  },
+  {
+   "id": 1431694597,
+   "lat": 32.480647,
+   "lon": 34.920032,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 1431694600,
+   "lat": 32.464857,
+   "lon": 34.914092,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 1431701159,
+   "lat": 32.426509,
+   "lon": 34.908122,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 1474270482,
+   "lat": 32.422637,
+   "lon": 34.906929,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 1588405591,
+   "lat": 32.432931,
+   "lon": 34.88907,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 1861399051,
+   "lat": 32.03549,
+   "lon": 34.785219,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 2134965920,
+   "lat": 32.42187,
+   "lon": 34.885769,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 2165165957,
+   "lat": 32.52507,
+   "lon": 34.914641,
+   "limit": 110,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 2165167688,
+   "lat": 32.535473,
+   "lon": 34.915703,
+   "limit": 110,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 2338540666,
+   "lat": 31.836339,
+   "lon": 34.78371,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 2908540459,
+   "lat": 32.509186,
+   "lon": 34.930369,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 2908540464,
+   "lat": 32.44247,
+   "lon": 34.911012,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 2908861249,
+   "lat": 32.323607,
+   "lon": 34.904266,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 2908861250,
+   "lat": 32.289038,
+   "lon": 34.858209,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3121802640,
+   "lat": 32.495422,
+   "lon": 34.926026,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257975264,
+   "lat": 32.97152,
+   "lon": 35.092419,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257975559,
+   "lat": 32.792588,
+   "lon": 34.966933,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3257975560,
+   "lat": 32.788351,
+   "lon": 35.012239,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3257977659,
+   "lat": 33.016433,
+   "lon": 35.143061,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257978840,
+   "lat": 32.964111,
+   "lon": 35.093819,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257982940,
+   "lat": 32.952191,
+   "lon": 35.090719,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": 200.0,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257982951,
+   "lat": 32.811191,
+   "lon": 35.083011,
+   "limit": 100,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257983079,
+   "lat": 32.921571,
+   "lon": 35.092427,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": 275.0,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3257983525,
+   "lat": 32.893209,
+   "lon": 35.181579,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257987722,
+   "lat": 32.898932,
+   "lon": 35.092541,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257988087,
+   "lat": 32.858713,
+   "lon": 35.102507,
+   "limit": 100,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257992310,
+   "lat": 32.805954,
+   "lon": 35.065186,
+   "limit": 100,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257995763,
+   "lat": 32.800638,
+   "lon": 35.051093,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257996525,
+   "lat": 32.922323,
+   "lon": 35.417487,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257996909,
+   "lat": 32.890722,
+   "lon": 35.194216,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3257998380,
+   "lat": 32.941508,
+   "lon": 35.163636,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258005198,
+   "lat": 32.710479,
+   "lon": 34.970569,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258005288,
+   "lat": 32.877062,
+   "lon": 35.23137,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258008461,
+   "lat": 32.583257,
+   "lon": 34.966573,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258015929,
+   "lat": 32.115059,
+   "lon": 34.940629,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258015930,
+   "lat": 32.107419,
+   "lon": 35.006187,
+   "limit": 100,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258016165,
+   "lat": 32.278185,
+   "lon": 34.849611,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258016709,
+   "lat": 32.115555,
+   "lon": 34.903169,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258018160,
+   "lat": 32.119814,
+   "lon": 34.91241,
+   "limit": 100,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258018465,
+   "lat": 32.14363,
+   "lon": 34.894479,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258018529,
+   "lat": 32.093833,
+   "lon": 34.882626,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258018561,
+   "lat": 32.118227,
+   "lon": 34.919062,
+   "limit": 100,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258021272,
+   "lat": 32.18549,
+   "lon": 34.853886,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": 195.0,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258021281,
+   "lat": 32.175468,
+   "lon": 34.89107,
+   "limit": null,
+   "limitSource": null,
+   "direction": 140.0,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258024071,
+   "lat": 32.137169,
+   "lon": 34.940708,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258024262,
+   "lat": 32.16506,
+   "lon": 34.92655,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258025727,
+   "lat": 32.176448,
+   "lon": 34.937605,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258026249,
+   "lat": 32.095078,
+   "lon": 34.937446,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258026272,
+   "lat": 32.092016,
+   "lon": 34.8594,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258026275,
+   "lat": 32.105118,
+   "lon": 34.849012,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258031605,
+   "lat": 32.099623,
+   "lon": 34.793461,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258032129,
+   "lat": 32.059512,
+   "lon": 34.820821,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258032171,
+   "lat": 32.08543,
+   "lon": 34.810678,
+   "limit": 30,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258034604,
+   "lat": 32.046866,
+   "lon": 34.783693,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258034605,
+   "lat": 32.046973,
+   "lon": 34.784129,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258037255,
+   "lat": 32.010023,
+   "lon": 34.791957,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258037262,
+   "lat": 32.030309,
+   "lon": 34.750867,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258037758,
+   "lat": 32.00488,
+   "lon": 34.77808,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258037759,
+   "lat": 32.001464,
+   "lon": 34.82083,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258038380,
+   "lat": 32.004875,
+   "lon": 34.773536,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258038609,
+   "lat": 32.01209,
+   "lon": 34.778604,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258041481,
+   "lat": 32.008713,
+   "lon": 34.815516,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258042010,
+   "lat": 31.95498,
+   "lon": 34.854934,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258042540,
+   "lat": 31.794125,
+   "lon": 34.641918,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258043309,
+   "lat": 31.979695,
+   "lon": 34.779869,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258043714,
+   "lat": 31.98708,
+   "lon": 34.758653,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258044148,
+   "lat": 31.956792,
+   "lon": 34.906714,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258044239,
+   "lat": 31.798762,
+   "lon": 34.645147,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258044866,
+   "lat": 31.92221,
+   "lon": 34.88496,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258044867,
+   "lat": 31.80754,
+   "lon": 34.65009,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258046418,
+   "lat": 31.802828,
+   "lon": 34.647682,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258046542,
+   "lat": 31.790191,
+   "lon": 34.654327,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258047172,
+   "lat": 31.78471,
+   "lon": 34.650237,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258048105,
+   "lat": 31.778522,
+   "lon": 34.662782,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258048107,
+   "lat": 31.753465,
+   "lon": 34.662979,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258048161,
+   "lat": 31.7823,
+   "lon": 34.655364,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258048973,
+   "lat": 31.806171,
+   "lon": 35.203905,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258049391,
+   "lat": 31.797407,
+   "lon": 35.257416,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258049764,
+   "lat": 31.801351,
+   "lon": 35.318178,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258050085,
+   "lat": 31.799324,
+   "lon": 35.411926,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258050720,
+   "lat": 31.772489,
+   "lon": 35.194479,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258051543,
+   "lat": 31.70253,
+   "lon": 34.714193,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258052161,
+   "lat": 31.75613,
+   "lon": 35.222019,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258052162,
+   "lat": 31.750048,
+   "lon": 35.218846,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 3258052662,
+   "lat": 31.733161,
+   "lon": 34.758118,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258056069,
+   "lat": 31.653089,
+   "lon": 34.663759,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258058361,
+   "lat": 31.643181,
+   "lon": 34.767617,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258058363,
+   "lat": 31.599668,
+   "lon": 34.812452,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258058366,
+   "lat": 31.629728,
+   "lon": 34.917033,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258058477,
+   "lat": 31.667773,
+   "lon": 34.932109,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258058676,
+   "lat": 31.563711,
+   "lon": 34.760377,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258058677,
+   "lat": 31.554237,
+   "lon": 34.764041,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258061419,
+   "lat": 31.668362,
+   "lon": 34.574121,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258061420,
+   "lat": 31.661281,
+   "lon": 34.574021,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258061421,
+   "lat": 31.663798,
+   "lon": 34.562176,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258062874,
+   "lat": 31.253208,
+   "lon": 34.814716,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258062875,
+   "lat": 31.25703,
+   "lon": 34.825946,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258067927,
+   "lat": 32.830191,
+   "lon": 35.232978,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258067928,
+   "lat": 32.833607,
+   "lon": 35.229158,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258067929,
+   "lat": 32.828463,
+   "lon": 35.199734,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258067932,
+   "lat": 32.824598,
+   "lon": 35.151851,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069004,
+   "lat": 32.706296,
+   "lon": 35.162587,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069006,
+   "lat": 32.687556,
+   "lon": 35.294488,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069007,
+   "lat": 32.701213,
+   "lon": 35.311256,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069499,
+   "lat": 32.734993,
+   "lon": 35.411708,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069500,
+   "lat": 32.671326,
+   "lon": 35.404552,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069501,
+   "lat": 32.643521,
+   "lon": 35.351183,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069502,
+   "lat": 32.521279,
+   "lon": 35.48272,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069503,
+   "lat": 32.54931,
+   "lon": 35.40101,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069504,
+   "lat": 32.568502,
+   "lon": 35.334803,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069505,
+   "lat": 32.568429,
+   "lon": 35.181086,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069506,
+   "lat": 32.565611,
+   "lon": 35.178137,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258069507,
+   "lat": 32.50634,
+   "lon": 35.098729,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258076970,
+   "lat": 32.49733,
+   "lon": 35.063389,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3258078262,
+   "lat": 32.44928,
+   "lon": 34.96174,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3261183927,
+   "lat": 32.124362,
+   "lon": 34.855737,
+   "limit": 100,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3261216437,
+   "lat": 32.694201,
+   "lon": 35.232098,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3261229209,
+   "lat": 31.678621,
+   "lon": 34.765289,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3261254351,
+   "lat": 31.77364,
+   "lon": 35.194147,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3374319411,
+   "lat": 33.169589,
+   "lon": 35.570111,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3381423809,
+   "lat": 32.658149,
+   "lon": 35.292259,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3564155359,
+   "lat": 32.501554,
+   "lon": 35.074252,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3822458638,
+   "lat": 32.925062,
+   "lon": 35.289232,
+   "limit": 90,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3822459067,
+   "lat": 32.918283,
+   "lon": 35.266602,
+   "limit": 90,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3822459068,
+   "lat": 32.916234,
+   "lon": 35.252916,
+   "limit": 90,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3822463728,
+   "lat": 32.948403,
+   "lon": 35.09258,
+   "limit": 90,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 3832924976,
+   "lat": 31.951751,
+   "lon": 34.856181,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 4260769220,
+   "lat": 32.432454,
+   "lon": 34.889107,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 5011487904,
+   "lat": 31.828854,
+   "lon": 35.252908,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 5251654841,
+   "lat": 32.517583,
+   "lon": 34.929915,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 5298946460,
+   "lat": 32.822876,
+   "lon": 35.151659,
+   "limit": 90,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 5308907032,
+   "lat": 32.80506,
+   "lon": 35.055627,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 5760149793,
+   "lat": 32.059723,
+   "lon": 35.870038,
+   "limit": 90,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 5760149794,
+   "lat": 32.059731,
+   "lon": 35.870223,
+   "limit": 90,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 6186799284,
+   "lat": 32.709805,
+   "lon": 35.13502,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 6615327743,
+   "lat": 31.854689,
+   "lon": 35.890046,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 6772118233,
+   "lat": 32.037098,
+   "lon": 35.789975,
+   "limit": 80,
+   "limitSource": "camera",
+   "direction": 320.0,
+   "urban": false,
+   "name": "السرعة 80"
+  },
+  {
+   "id": 6772136671,
+   "lat": 32.197049,
+   "lon": 35.865077,
+   "limit": 60,
+   "limitSource": "camera",
+   "direction": 180.0,
+   "urban": true,
+   "name": "السرعة 60"
+  },
+  {
+   "id": 6772139077,
+   "lat": 32.032846,
+   "lon": 35.835033,
+   "limit": 70,
+   "limitSource": "camera",
+   "direction": 95.0,
+   "urban": false,
+   "name": "السرعة 70"
+  },
+  {
+   "id": 6772141523,
+   "lat": 32.353889,
+   "lon": 35.915348,
+   "limit": 100,
+   "limitSource": "camera",
+   "direction": 210.0,
+   "urban": false,
+   "name": "السرعة 100"
+  },
+  {
+   "id": 6772142614,
+   "lat": 31.980049,
+   "lon": 35.932912,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": 1.0,
+   "urban": true,
+   "name": "السرعة 50"
+  },
+  {
+   "id": 6772142975,
+   "lat": 32.496879,
+   "lon": 35.878384,
+   "limit": 80,
+   "limitSource": "camera",
+   "direction": 170.0,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 6772142976,
+   "lat": 32.036121,
+   "lon": 35.8838,
+   "limit": 60,
+   "limitSource": "camera",
+   "direction": 190.0,
+   "urban": true,
+   "name": "السرعة 60"
+  },
+  {
+   "id": 6772144708,
+   "lat": 31.957628,
+   "lon": 35.888346,
+   "limit": 60,
+   "limitSource": "camera",
+   "direction": 290.0,
+   "urban": true,
+   "name": "السرعة 60"
+  },
+  {
+   "id": 6772144796,
+   "lat": 32.511635,
+   "lon": 35.873649,
+   "limit": 80,
+   "limitSource": "camera",
+   "direction": 170.0,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 6772146473,
+   "lat": 31.962036,
+   "lon": 35.903303,
+   "limit": 60,
+   "limitSource": "camera",
+   "direction": 320.0,
+   "urban": true,
+   "name": "السرعة 60"
+  },
+  {
+   "id": 6772146737,
+   "lat": 32.321926,
+   "lon": 35.919448,
+   "limit": 100,
+   "limitSource": "camera",
+   "direction": 190.0,
+   "urban": false,
+   "name": "السرعة 100"
+  },
+  {
+   "id": 6772147133,
+   "lat": 32.040379,
+   "lon": 35.837058,
+   "limit": 70,
+   "limitSource": "camera",
+   "direction": 180.0,
+   "urban": false,
+   "name": "السرعة 70"
+  },
+  {
+   "id": 6772147227,
+   "lat": 32.242575,
+   "lon": 35.892804,
+   "limit": 60,
+   "limitSource": "camera",
+   "direction": 170.0,
+   "urban": true,
+   "name": "السرعة 60"
+  },
+  {
+   "id": 6772149433,
+   "lat": 32.036266,
+   "lon": 35.790783,
+   "limit": 80,
+   "limitSource": "camera",
+   "direction": 150.0,
+   "urban": false,
+   "name": "السرعة 80"
+  },
+  {
+   "id": 6772149553,
+   "lat": 31.856875,
+   "lon": 35.890601,
+   "limit": 100,
+   "limitSource": "camera",
+   "direction": 190.0,
+   "urban": false,
+   "name": "السرعة 100"
+  },
+  {
+   "id": 6772149554,
+   "lat": 31.922802,
+   "lon": 35.911586,
+   "limit": 60,
+   "limitSource": "camera",
+   "direction": 180.0,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 6772150867,
+   "lat": 32.515512,
+   "lon": 35.871983,
+   "limit": 80,
+   "limitSource": "camera",
+   "direction": 0.0,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 6772150889,
+   "lat": 31.96925,
+   "lon": 35.942987,
+   "limit": 70,
+   "limitSource": "camera",
+   "direction": 320.0,
+   "urban": false,
+   "name": "السرعة 70"
+  },
+  {
+   "id": 6772151263,
+   "lat": 32.038564,
+   "lon": 35.896798,
+   "limit": 60,
+   "limitSource": "camera",
+   "direction": 20.0,
+   "urban": true,
+   "name": "السرعة 60"
+  },
+  {
+   "id": 6772152905,
+   "lat": 31.877465,
+   "lon": 35.883931,
+   "limit": 100,
+   "limitSource": "camera",
+   "direction": 310.0,
+   "urban": false,
+   "name": "السرعة 100"
+  },
+  {
+   "id": 7004744701,
+   "lat": 31.877354,
+   "lon": 35.948865,
+   "limit": 80,
+   "limitSource": "camera",
+   "direction": 100.0,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 7140588182,
+   "lat": 32.033291,
+   "lon": 35.863416,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 8254289597,
+   "lat": 32.971037,
+   "lon": 35.550757,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 8281773516,
+   "lat": 32.037798,
+   "lon": 34.831528,
+   "limit": null,
+   "limitSource": null,
+   "direction": 270.0,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 8788693122,
+   "lat": 31.907895,
+   "lon": 35.865813,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 8788695225,
+   "lat": 31.819735,
+   "lon": 35.904036,
+   "limit": null,
+   "limitSource": null,
+   "direction": -25.0,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 8851403321,
+   "lat": 32.544528,
+   "lon": 34.916677,
+   "limit": 110,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 8930913731,
+   "lat": 31.945183,
+   "lon": 35.854866,
+   "limit": 60,
+   "limitSource": "camera",
+   "direction": 90.0,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 8930913732,
+   "lat": 31.945471,
+   "lon": 35.858013,
+   "limit": 60,
+   "limitSource": "camera",
+   "direction": 270.0,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 11820071816,
+   "lat": 32.231983,
+   "lon": 34.984224,
+   "limit": 90,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 11820083701,
+   "lat": 32.22737,
+   "lon": 34.982109,
+   "limit": 70,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "name": null
+  },
+  {
+   "id": 12133631068,
+   "lat": 32.92512,
+   "lon": 35.543847,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": "Speed camera"
+  },
+  {
+   "id": 13041129870,
+   "lat": 32.921698,
+   "lon": 35.091309,
+   "limit": 50,
+   "limitSource": "camera",
+   "direction": 100.0,
+   "urban": true,
+   "name": null
+  },
+  {
+   "id": 13898118584,
+   "lat": 32.102261,
+   "lon": 34.935221,
+   "limit": 120,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "name": null
+  }
+ ]
+}

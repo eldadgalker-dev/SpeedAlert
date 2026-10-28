@@ -1,0 +1,15 @@
+{
+  "note": "Fines (NIS) and points by km/h over the limit. Source: Israeli traffic-lawyer summaries of the 2026 schedule (צו התעבורה - עבירות קנס, תשס\"ב-2002); not verified against the official order. Edit here to correct.",
+  "urban": [
+    {"from": 1,  "to": 20,  "fine": 250,  "points": 0},
+    {"from": 21, "to": 30,  "fine": 750,  "points": 8},
+    {"from": 31, "to": 40,  "fine": 1500, "points": 10},
+    {"from": 41, "to": 999, "fine": 0,    "points": 10, "court": true}
+  ],
+  "interurban": [
+    {"from": 1,  "to": 25,  "fine": 250,  "points": 0},
+    {"from": 26, "to": 40,  "fine": 750,  "points": 8},
+    {"from": 41, "to": 50,  "fine": 1500, "points": 10},
+    {"from": 51, "to": 999, "fine": 0,    "points": 10, "court": true}
+  ]
+}
