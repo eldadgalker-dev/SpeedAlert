@@ -134,7 +134,7 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(0, -2, 1f))
         addView(TextView(context).apply {
             text = "גרסה ${BuildConfig.VERSION_NAME}"; textSize = 13f; setTextColor(0xCCFFFFFF.toInt())
-        })
+        }, LinearLayout.LayoutParams(-2, -2).apply { marginStart = px(12) })
     }
 
     private fun render() {
@@ -202,8 +202,12 @@ class MainActivity : Activity() {
     private fun row(key: String) = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL
         setPadding(0, px(6), 0, px(6))
-        addView(text(15f, pal.muted, key), LinearLayout.LayoutParams(0, -2, 1f))
-        addView(text(15f, pal.text).apply { setTypeface(typeface, Typeface.BOLD); info[key] = this })
+        // The label keeps its width; a long value wraps inside its own column (field report 2026-10-28).
+        addView(text(15f, pal.muted, key).apply { maxLines = 1 },
+            LinearLayout.LayoutParams(-2, -2).apply { marginEnd = px(12) })
+        addView(text(15f, pal.text).apply {
+            setTypeface(typeface, Typeface.BOLD); gravity = Gravity.END; info[key] = this
+        }, LinearLayout.LayoutParams(0, -2, 1f))
     }
 
     // ---- actions ----

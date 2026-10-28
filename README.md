@@ -6,6 +6,7 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 ## What it does
 
 - Foreground service follows GPS once per second: position, speed, heading.
+- Every announcement opens with three loud, harsh beeps on the alarm stream (each one-time alert, and the start of each repeating alert; its repeats have no beeps).
 - A camera counts only when it is ahead (within 35° of the heading) and not facing across the road.
 - Speed camera: from 500 m before it the alert repeats without a break, with the current
   distance and speed, until the camera is passed (also while stopped near it):

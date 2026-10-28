@@ -14,6 +14,7 @@ import android.location.Location
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.media.ToneGenerator
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -37,6 +38,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private lateinit var speeding: SpeedingWatcher
     private lateinit var busLanes: BusLaneWatcher
     private val once = ArrayDeque<String>()          // one-time alerts waiting for the voice
+    private var alerting = false                     // an alert episode is under way (beeps played)
+    private var beepsUntil = 0L                      // the voice waits for the beeps to end
     private lateinit var tts: TextToSpeech
     private lateinit var audio: AudioManager
     private var ttsReady = false
@@ -82,7 +85,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
                     speeding.penalties = Database.penalties(this@AlertService)
                     runCatching { busLanes.lanes = Database.busLanes(this@AlertService) }
                     runCatching { speeding.roads = Database.roads(this@AlertService) }
-                    dataInfo = "מאגר עודכן: ${cams.size} מצלמות (${Database.fetched(this@AlertService)})"
+                    dataInfo = "עודכן: ${cams.size} מצלמות (${Database.fetched(this@AlertService)})"
                 }
             }.start()
             main.postDelayed(this, DataUpdate.INTERVAL_MS)
@@ -91,7 +94,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_TEST) {
-            speak("בדיקה. מצלמת מהירות בעוד 500 מטר. מהירות נוכחית 102. מותרת 90. הוֹרֵד 12 קילומטר לשעה. קנס 250 שקלים, ללא נקודות.")
+            beepThenSpeak("בדיקה. מצלמת מהירות בעוד 500 מטר. מהירות נוכחית 102. מותרת 90. הוֹרֵד 12 קילומטר לשעה. קנס 250 שקלים, ללא נקודות.")
             main.postDelayed({ if (!tts.isSpeaking) restoreVolume() }, 8000)
         }
         return START_STICKY
@@ -141,15 +144,28 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
             if (camera?.repeat == true) null else speeding.onLocation(lat, lon, speedKmh, heading))
         alerts.filter { !it.repeat }.forEach { once.addLast(it.text) }
         val repeating = alerts.firstOrNull { it.repeat }?.text
-        if (ttsReady && tts.isSpeaking) return
+        if ((ttsReady && tts.isSpeaking) || System.currentTimeMillis() < beepsUntil) return
         // Continuous: the next sentence (with fresh distance and speed) starts as soon as the last ends.
-        val text = once.removeFirstOrNull() ?: repeating
+        val single = once.removeFirstOrNull()
+        val text = single ?: repeating
         if (text == null) {
+            alerting = false
             if (ttsReady) restoreVolume()
             return
         }
         lastAlert = text
-        speak(text)
+        // Three beeps open every announcement: each one-time alert and each new repeating alert.
+        if (single != null || !alerting) beepThenSpeak(text) else speak(text)
+        alerting = repeating != null
+    }
+
+    /** Three loud, harsh beeps on the alarm stream (user request 2026-10-28), then the sentence. */
+    private fun beepThenSpeak(text: String) {
+        maximise()
+        beepsUntil = System.currentTimeMillis() + BEEPS * BEEP_GAP_MS
+        val tone = runCatching { ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME) }.getOrNull()
+        for (i in 0 until BEEPS) main.postDelayed({ tone?.startTone(ToneGenerator.TONE_CDMA_HIGH_L, BEEP_MS) }, i * BEEP_GAP_MS)
+        main.postDelayed({ tone?.release(); speak(text) }, BEEPS * BEEP_GAP_MS)
     }
 
     /** "Do not disturb" set to total silence blocks even the alarm stream; report it. */
@@ -163,6 +179,12 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
      */
     private fun speak(text: String) {
         if (!ttsReady) { pending = text; return }
+        maximise()
+        val params = Bundle().apply { putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_ALARM) }
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "alert-${System.currentTimeMillis()}")
+    }
+
+    private fun maximise() {
         for (stream in intArrayOf(AudioManager.STREAM_ALARM, AudioManager.STREAM_MUSIC)) {
             saved.getOrPut(stream) { audio.getStreamVolume(stream) }
             runCatching {
@@ -175,8 +197,6 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
                 .setAudioAttributes(ALERT_AUDIO).build()
                 .also { audio.requestAudioFocus(it) }
         }
-        val params = Bundle().apply { putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_ALARM) }
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "alert-${System.currentTimeMillis()}")
     }
 
     /** Puts the volumes back once no alert is due (camera passed, speed back under the limit). */
@@ -220,6 +240,9 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     companion object {
         const val CHANNEL = "camera-alerts"
         const val ACTION_TEST = "il.speedalert.TEST"
+        private const val BEEPS = 3
+        private const val BEEP_MS = 180
+        private const val BEEP_GAP_MS = 300L
         private val ALERT_AUDIO: AudioAttributes = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_ALARM)
             .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
