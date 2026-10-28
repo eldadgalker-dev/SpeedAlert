@@ -1,0 +1,2 @@
+# one entry per line: a master folder path, drive-master, or git: <relative dir of the clone>
+git: .
