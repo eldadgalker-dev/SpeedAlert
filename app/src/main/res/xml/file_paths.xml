@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/ -->
 <paths>
     <!-- Downloaded update APKs: cacheDir/updates -->
     <cache-path name="updates" path="updates/" />

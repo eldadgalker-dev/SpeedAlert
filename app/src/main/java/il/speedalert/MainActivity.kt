@@ -1,3 +1,4 @@
+// Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/
 package il.speedalert
 
 import android.Manifest
@@ -116,6 +117,13 @@ class MainActivity : Activity() {
                 setTypeface(typeface, Typeface.BOLD); setPadding(0, 0, 0, px(6))
             })
             for (key in listOf(K_BATTERY, K_DRAIN, K_MEMORY, K_CPU, K_UPTIME, K_DATA, K_VERSION)) addView(row(key))
+        })
+        // Copyright and data credits; Latin-only line forced LTR so bidi cannot reorder it.
+        body.addView(text(12f, pal.muted, COPYRIGHT).apply {
+            textDirection = View.TEXT_DIRECTION_LTR; gravity = Gravity.CENTER; setPadding(0, px(12), 0, 0)
+        })
+        body.addView(text(12f, pal.muted, "רישיון ⁦BSD-3-Clause⁩. נתוני מפה: ⁦© OpenStreetMap contributors, ODbL⁩.").apply {
+            gravity = Gravity.CENTER; setPadding(0, px(2), 0, px(8))
         })
 
         root.addView(ScrollView(this).apply { addView(body) }, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -297,5 +305,6 @@ class MainActivity : Activity() {
         private const val K_UPTIME = "זמן פעילות"
         private const val K_DATA = "מאגר מצלמות"
         private const val K_VERSION = "גרסת תוכנה"
+        private const val COPYRIGHT = "Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/"
     }
 }

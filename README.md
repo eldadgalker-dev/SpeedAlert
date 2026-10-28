@@ -78,3 +78,8 @@ APK: `~/.speedalert-build/app/outputs/apk/debug/app-debug.apk`.
 - OSM coverage of Israeli cameras is partial (182 cameras on 2026-10-28; 46 without a known limit).
   The official GovMap layer is not downloadable as a file and is not included.
 - Point-to-point (average speed) sections and red-light cameras are not handled separately.
+
+## Copyright and licence
+
+- Application code: Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/ — BSD-3-Clause (see `LICENSE.txt`).
+- Map data: © OpenStreetMap contributors, ODbL. Bus-lane sections: Israel Ministry of Transport (gov.il).

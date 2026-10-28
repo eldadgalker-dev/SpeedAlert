@@ -1,3 +1,4 @@
+// Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/
 plugins {
     id("com.android.application") version "8.13.0" apply false
     id("org.jetbrains.kotlin.android") version "2.1.21" apply false

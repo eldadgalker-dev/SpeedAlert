@@ -1,3 +1,4 @@
+# Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/
 """Fetch Israeli speed and red-light cameras from OpenStreetMap and build data/cameras.json.
 
 Cameras come from speed_camera nodes, nodes tagged enforcement=traffic_signals/red_light_camera,

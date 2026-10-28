@@ -1,3 +1,4 @@
+# Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/
 """Build data/roads.txt: speed limit per road segment in Israel, from OpenStreetMap.
 
 Used by the app to warn when driving 30 km/h or more above the limit where there is no camera.

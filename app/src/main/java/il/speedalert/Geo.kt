@@ -1,3 +1,4 @@
+// Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/
 package il.speedalert
 
 import kotlin.math.abs
