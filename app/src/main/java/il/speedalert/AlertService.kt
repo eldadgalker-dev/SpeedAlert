@@ -38,7 +38,6 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private lateinit var speeding: SpeedingWatcher
     private lateinit var busLanes: BusLaneWatcher
     private val once = ArrayDeque<String>()          // one-time alerts waiting for the voice
-    private var alerting = false                     // an alert episode is under way (beeps played)
     private var beepsUntil = 0L                      // the voice waits for the beeps to end
     private lateinit var tts: TextToSpeech
     private lateinit var audio: AudioManager
@@ -146,17 +145,14 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         val repeating = alerts.firstOrNull { it.repeat }?.text
         if ((ttsReady && tts.isSpeaking) || System.currentTimeMillis() < beepsUntil) return
         // Continuous: the next sentence (with fresh distance and speed) starts as soon as the last ends.
-        val single = once.removeFirstOrNull()
-        val text = single ?: repeating
+        val text = once.removeFirstOrNull() ?: repeating
         if (text == null) {
-            alerting = false
             if (ttsReady) restoreVolume()
             return
         }
         lastAlert = text
-        // Three beeps open every announcement: each one-time alert and each new repeating alert.
-        if (single != null || !alerting) beepThenSpeak(text) else speak(text)
-        alerting = repeating != null
+        // Three beeps open every announcement, repeats included (user decision 2026-10-28).
+        beepThenSpeak(text)
     }
 
     /** Three loud, harsh beeps on the alarm stream (user request 2026-10-28), then the sentence. */
