@@ -1,15 +1,57 @@
 {
-  "note": "Fines (NIS) and points by km/h over the limit. Source: Israeli traffic-lawyer summaries of the 2026 schedule (צו התעבורה - עבירות קנס, תשס\"ב-2002); not verified against the official order. Edit here to correct.",
+  "note": "Fines (NIS) by km/h over the limit. Fines VERIFIED 2026-10-28 against צו התעבורה (עבירות קנס), תשס\"ב-2002, consolidated text as of 01-09-2026, items 75-78א (regulation 54(א)): https://www.nevo.co.il/law_html/law00/70383.htm . Above 40 km/h (urban) / 50 km/h (interurban) there is no fine in the order: court summons. Points (0/8/10) NOT yet verified against the points table (תקנות התעבורה, חלק ז').",
   "urban": [
-    {"from": 1,  "to": 20,  "fine": 250,  "points": 0},
-    {"from": 21, "to": 30,  "fine": 750,  "points": 8},
-    {"from": 31, "to": 40,  "fine": 1500, "points": 10},
-    {"from": 41, "to": 999, "fine": 0,    "points": 10, "court": true}
+    {
+      "from": 1,
+      "to": 20,
+      "fine": 250,
+      "points": 0
+    },
+    {
+      "from": 21,
+      "to": 30,
+      "fine": 750,
+      "points": 8
+    },
+    {
+      "from": 31,
+      "to": 40,
+      "fine": 1500,
+      "points": 10
+    },
+    {
+      "from": 41,
+      "to": 999,
+      "fine": 0,
+      "points": 10,
+      "court": true
+    }
   ],
   "interurban": [
-    {"from": 1,  "to": 25,  "fine": 250,  "points": 0},
-    {"from": 26, "to": 40,  "fine": 750,  "points": 8},
-    {"from": 41, "to": 50,  "fine": 1500, "points": 10},
-    {"from": 51, "to": 999, "fine": 0,    "points": 10, "court": true}
+    {
+      "from": 1,
+      "to": 25,
+      "fine": 250,
+      "points": 0
+    },
+    {
+      "from": 26,
+      "to": 40,
+      "fine": 750,
+      "points": 8
+    },
+    {
+      "from": 41,
+      "to": 50,
+      "fine": 1500,
+      "points": 10
+    },
+    {
+      "from": 51,
+      "to": 999,
+      "fine": 0,
+      "points": 10,
+      "court": true
+    }
   ]
 }
