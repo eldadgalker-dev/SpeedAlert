@@ -1,0 +1,73 @@
+# Refreshes data/roads.txt (road speed limits, for the no-camera speeding alert) from OpenStreetMap
+# once a week and commits only a real change. The app downloads roads.txt only when roads.version changes.
+name: roads
+
+on:
+  schedule:
+    - cron: "41 2 * * 1"   # Mondays 02:41 UTC; the query is heavy, so not hourly
+  push:
+    branches: [main]
+    paths:
+      - "tools/fetch_roads.py"
+      - ".github/workflows/roads.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch roads (Overpass)
+        id: fetch
+        run: |
+          mkdir -p "$RUNNER_TEMP/roads"
+          if python tools/fetch_roads.py --out "$RUNNER_TEMP/roads/roads.txt"; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::Overpass fetch failed; roads unchanged"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Compare and accept
+        if: steps.fetch.outputs.ok == 'true'
+        id: cmp
+        run: |
+          new="$RUNNER_TEMP/roads/roads.txt"
+          out="$GITHUB_OUTPUT"
+          if cmp -s "$RUNNER_TEMP/roads/roads.version" data/roads.version; then
+            echo "Roads unchanged"; echo "changed=false" >> "$out"; exit 0
+          fi
+          n=$(grep -vc '^#' "$new"); o=$(grep -vc '^#' data/roads.txt)
+          # A partial Overpass answer must never wipe the table.
+          if [ "$n" -lt $(( o * 8 / 10 )) ]; then
+            echo "::error::Refusing update: $n roads vs $o"; exit 1
+          fi
+          echo "Roads changed: $o -> $n"; echo "changed=true" >> "$out"
+
+      - name: Commit data
+        if: steps.cmp.outputs.changed == 'true'
+        run: |
+          cp "$RUNNER_TEMP/roads/roads.txt" "$RUNNER_TEMP/roads/roads.version" data/
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/roads.txt data/roads.version
+          git commit -m "Road speed limits update $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git pull --rebase origin main
+          done
+          exit 1

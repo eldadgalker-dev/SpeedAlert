@@ -1,8 +1,74 @@
 {
  "source": "OpenStreetMap contributors (ODbL), via Overpass API",
  "fetched": "2026-10-28",
- "count": 186,
+ "count": 219,
  "cameras": [
+  {
+   "id": 34136717,
+   "lat": 32.160368,
+   "lon": 34.811743,
+   "limit": 30,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 195313401,
+   "lat": 32.373933,
+   "lon": 34.908767,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 195317224,
+   "lat": 32.324929,
+   "lon": 34.869157,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 332265504,
+   "lat": 32.220738,
+   "lon": 34.980743,
+   "limit": 70,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 369183514,
+   "lat": 32.344845,
+   "lon": 34.907883,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 441296321,
+   "lat": 32.357594,
+   "lon": 34.908622,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
   {
    "id": 452459007,
    "lat": 32.274498,
@@ -11,6 +77,29 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 469933489,
+   "lat": 32.141904,
+   "lon": 34.801449,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 469945639,
+   "lat": 32.094618,
+   "lon": 34.79427,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "kind": "red_light",
    "name": null
   },
   {
@@ -21,6 +110,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 70"
   },
   {
@@ -31,6 +121,40 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 965089747,
+   "lat": 31.258508,
+   "lon": 34.775986,
+   "limit": 60,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1096221959,
+   "lat": 32.036748,
+   "lon": 34.840655,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1096228654,
+   "lat": 32.068893,
+   "lon": 34.763279,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "kind": "red_light",
    "name": null
   },
   {
@@ -41,6 +165,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -51,6 +176,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -61,6 +187,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -71,6 +198,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -81,6 +209,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -91,6 +220,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -101,6 +231,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -111,6 +242,40 @@
    "limitSource": "camera",
    "direction": null,
    "urban": true,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 1096829859,
+   "lat": 32.092978,
+   "lon": 34.940579,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1096829874,
+   "lat": 32.068072,
+   "lon": 34.933562,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1104339319,
+   "lat": 32.151598,
+   "lon": 34.9211,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
    "name": null
   },
   {
@@ -121,7 +286,30 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": "Camera traffic signals"
+  },
+  {
+   "id": 1316001282,
+   "lat": 33.005606,
+   "lon": 35.09958,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1431678870,
+   "lat": 32.005119,
+   "lon": 34.784123,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": "traffic signal flash"
   },
   {
    "id": 1431694597,
@@ -131,6 +319,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -141,6 +330,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -151,6 +341,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -161,6 +352,18 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 1522033934,
+   "lat": 32.272985,
+   "lon": 34.85599,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
    "name": null
   },
   {
@@ -171,6 +374,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -181,6 +385,73 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 1951246824,
+   "lat": 32.028048,
+   "lon": 34.779085,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1951277498,
+   "lat": 32.068133,
+   "lon": 34.938161,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1951591986,
+   "lat": 32.026481,
+   "lon": 34.891446,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1960945820,
+   "lat": 31.871289,
+   "lon": 35.178727,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1960945822,
+   "lat": 31.87091,
+   "lon": 35.177662,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 1961001834,
+   "lat": 31.902877,
+   "lon": 35.026286,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
    "name": null
   },
   {
@@ -191,6 +462,29 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 2134983798,
+   "lat": 32.447865,
+   "lon": 34.94327,
+   "limit": 50,
+   "limitSource": "road",
+   "direction": null,
+   "urban": true,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 2143684903,
+   "lat": 32.122323,
+   "lon": 34.903586,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
    "name": null
   },
   {
@@ -201,6 +495,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -211,6 +506,62 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 2165184618,
+   "lat": 32.448041,
+   "lon": 34.956508,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 2171089104,
+   "lat": 32.465205,
+   "lon": 34.994083,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 2171125736,
+   "lat": 32.533257,
+   "lon": 35.147777,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 2171130253,
+   "lat": 32.541585,
+   "lon": 35.156628,
+   "limit": 80,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
+  },
+  {
+   "id": 2265992887,
+   "lat": 32.814903,
+   "lon": 34.984807,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
    "name": null
   },
   {
@@ -221,7 +572,19 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
+  },
+  {
+   "id": 2837879414,
+   "lat": 32.44778,
+   "lon": 34.956929,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
+   "name": "Red light Camera"
   },
   {
    "id": 2908540459,
@@ -231,6 +594,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -241,6 +605,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -251,6 +616,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -261,6 +627,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -271,6 +638,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -281,6 +649,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -291,6 +660,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -301,6 +671,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -311,6 +682,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -321,6 +693,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -331,6 +704,7 @@
    "limitSource": "road",
    "direction": 200.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -341,6 +715,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -351,6 +726,7 @@
    "limitSource": "camera",
    "direction": 275.0,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -361,6 +737,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -371,6 +748,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -381,6 +759,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -391,6 +770,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -401,6 +781,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -411,6 +792,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -421,6 +803,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -431,6 +814,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -441,6 +825,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -451,6 +836,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -461,6 +847,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -471,6 +858,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -481,6 +869,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -491,6 +880,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -501,6 +891,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -511,16 +902,18 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
    "id": 3258018465,
    "lat": 32.14363,
    "lon": 34.894479,
-   "limit": null,
-   "limitSource": null,
+   "limit": 50,
+   "limitSource": "road",
    "direction": null,
-   "urban": false,
+   "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -531,6 +924,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -541,6 +935,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -551,6 +946,7 @@
    "limitSource": "road",
    "direction": 195.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -561,6 +957,7 @@
    "limitSource": null,
    "direction": 140.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -571,6 +968,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -581,6 +979,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -591,6 +990,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -601,6 +1001,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -611,6 +1012,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -621,6 +1023,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -631,6 +1034,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -641,6 +1045,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -651,6 +1056,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -661,6 +1067,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -671,6 +1078,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -681,6 +1089,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -691,6 +1100,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -701,6 +1111,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -711,6 +1122,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -721,6 +1133,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -731,6 +1144,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -741,6 +1155,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -751,6 +1166,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -761,6 +1177,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -771,6 +1188,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -781,6 +1199,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -791,6 +1210,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -801,6 +1221,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -811,6 +1232,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -821,6 +1243,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -831,6 +1254,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -841,6 +1265,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -851,6 +1276,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -861,6 +1287,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -871,6 +1298,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -881,6 +1309,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -891,6 +1320,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -901,6 +1331,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -911,6 +1342,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -921,6 +1353,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -931,6 +1364,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -941,6 +1375,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -951,6 +1386,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -961,6 +1397,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -971,6 +1408,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -981,6 +1419,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -991,6 +1430,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1001,6 +1441,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1011,6 +1452,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1021,6 +1463,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1031,6 +1474,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1041,6 +1485,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1051,6 +1496,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1061,6 +1507,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1071,6 +1518,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1081,6 +1529,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1091,6 +1540,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1101,6 +1551,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1111,6 +1562,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1121,6 +1573,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1131,6 +1584,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1141,6 +1595,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1151,6 +1606,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1161,6 +1617,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1171,6 +1628,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1181,6 +1639,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1191,6 +1650,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1201,6 +1661,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1211,6 +1672,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1221,6 +1683,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1231,6 +1694,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1241,6 +1705,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1251,6 +1716,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1261,6 +1727,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1271,6 +1738,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1281,6 +1749,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1291,6 +1760,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1301,6 +1771,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1311,6 +1782,18 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 3364816042,
+   "lat": 31.2541,
+   "lon": 35.124871,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "red_light",
    "name": null
   },
   {
@@ -1321,6 +1804,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1331,6 +1815,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1341,6 +1826,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1351,6 +1837,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1361,6 +1848,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1371,6 +1859,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1381,6 +1870,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1391,6 +1881,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1401,6 +1892,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1411,6 +1903,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1421,6 +1914,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1431,6 +1925,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1441,6 +1936,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1451,6 +1947,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1461,6 +1958,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1471,6 +1969,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1481,6 +1980,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1491,6 +1991,7 @@
    "limitSource": "camera",
    "direction": 320.0,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 80"
   },
   {
@@ -1501,6 +2002,7 @@
    "limitSource": "camera",
    "direction": 180.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1511,6 +2013,7 @@
    "limitSource": "camera",
    "direction": 95.0,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 70"
   },
   {
@@ -1521,6 +2024,7 @@
    "limitSource": "camera",
    "direction": 210.0,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 100"
   },
   {
@@ -1531,6 +2035,7 @@
    "limitSource": "camera",
    "direction": 1.0,
    "urban": true,
+   "kind": "speed",
    "name": "السرعة 50"
   },
   {
@@ -1541,6 +2046,7 @@
    "limitSource": "camera",
    "direction": 170.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1551,6 +2057,7 @@
    "limitSource": "camera",
    "direction": 190.0,
    "urban": true,
+   "kind": "speed",
    "name": "السرعة 60"
   },
   {
@@ -1561,6 +2068,7 @@
    "limitSource": "camera",
    "direction": 290.0,
    "urban": true,
+   "kind": "speed",
    "name": "السرعة 60"
   },
   {
@@ -1571,6 +2079,7 @@
    "limitSource": "camera",
    "direction": 170.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1581,6 +2090,7 @@
    "limitSource": "camera",
    "direction": 320.0,
    "urban": true,
+   "kind": "speed",
    "name": "السرعة 60"
   },
   {
@@ -1591,6 +2101,7 @@
    "limitSource": "camera",
    "direction": 190.0,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 100"
   },
   {
@@ -1601,6 +2112,7 @@
    "limitSource": "camera",
    "direction": 180.0,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 70"
   },
   {
@@ -1611,6 +2123,7 @@
    "limitSource": "camera",
    "direction": 170.0,
    "urban": true,
+   "kind": "speed",
    "name": "السرعة 60"
   },
   {
@@ -1621,6 +2134,7 @@
    "limitSource": "camera",
    "direction": 150.0,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 80"
   },
   {
@@ -1631,6 +2145,7 @@
    "limitSource": "camera",
    "direction": 190.0,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 100"
   },
   {
@@ -1641,6 +2156,7 @@
    "limitSource": "camera",
    "direction": 180.0,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1651,6 +2167,7 @@
    "limitSource": "camera",
    "direction": 0.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1661,6 +2178,7 @@
    "limitSource": "camera",
    "direction": 320.0,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 70"
   },
   {
@@ -1671,6 +2189,7 @@
    "limitSource": "camera",
    "direction": 20.0,
    "urban": true,
+   "kind": "speed",
    "name": "السرعة 60"
   },
   {
@@ -1681,6 +2200,7 @@
    "limitSource": "camera",
    "direction": 310.0,
    "urban": false,
+   "kind": "speed",
    "name": "السرعة 100"
   },
   {
@@ -1691,6 +2211,7 @@
    "limitSource": "camera",
    "direction": 100.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1701,6 +2222,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1711,6 +2233,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1721,6 +2244,7 @@
    "limitSource": null,
    "direction": 270.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1731,6 +2255,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1741,6 +2266,7 @@
    "limitSource": null,
    "direction": -25.0,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1751,6 +2277,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1761,6 +2288,7 @@
    "limitSource": "camera",
    "direction": 90.0,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1771,6 +2299,7 @@
    "limitSource": "camera",
    "direction": 270.0,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1781,6 +2310,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1791,6 +2321,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1801,7 +2332,19 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": "Speed camera"
+  },
+  {
+   "id": 12317699275,
+   "lat": 31.916378,
+   "lon": 34.862162,
+   "limit": 90,
+   "limitSource": "road",
+   "direction": 130.0,
+   "urban": false,
+   "kind": "red_light",
+   "name": null
   },
   {
    "id": 13041129870,
@@ -1811,6 +2354,7 @@
    "limitSource": "camera",
    "direction": 100.0,
    "urban": true,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1821,6 +2365,7 @@
    "limitSource": "road",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1831,6 +2376,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1841,6 +2387,7 @@
    "limitSource": null,
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1851,6 +2398,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   },
   {
@@ -1861,6 +2409,7 @@
    "limitSource": "camera",
    "direction": null,
    "urban": false,
+   "kind": "speed",
    "name": null
   }
  ]

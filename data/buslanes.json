@@ -1,0 +1,12 @@
+{
+ "source": "Ministry of Transport, https://www.gov.il/he/pages/citizen_cameras (updated 2025-10-29); one entry per section, both directions",
+ "hours": "Sun-Thu 06:00-24:00; Fri and holiday eves 06:00-15:00; after Shabbat and holidays 20:45-24:00; none on Shabbat and holidays",
+ "sections": [
+  {"road": "כביש 443", "from": [31.951614, 34.956350], "to": [31.902627, 35.026566]},
+  {"road": "כביש 471", "from": [32.069731, 34.860717], "to": [32.066709, 34.847215]},
+  {"road": "כביש 471", "from": [32.067920, 34.923133], "to": [32.068632, 34.944364]},
+  {"road": "כביש 4", "from": [32.133581, 34.870779], "to": [32.161820, 34.877532]},
+  {"road": "כביש 461", "from": [32.043498, 34.817318], "to": [32.037859, 34.830297]},
+  {"road": "כביש 5", "from": [32.116799, 34.924978], "to": [32.120519, 34.868436]}
+ ]
+}

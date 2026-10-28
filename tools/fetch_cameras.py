@@ -1,4 +1,7 @@
-"""Fetch Israeli speed cameras from OpenStreetMap and build data/cameras.json.
+"""Fetch Israeli speed and red-light cameras from OpenStreetMap and build data/cameras.json.
+
+Cameras come from speed_camera nodes, nodes tagged enforcement=traffic_signals/red_light_camera,
+and the device nodes of enforcement relations (maxspeed -> speed, traffic_signals -> red light).
 
 Source: Overpass API (OSM, ODbL). For each camera the speed limit is taken from
 its own maxspeed tag, else from the nearest road (within 40 m) that has maxspeed.
@@ -14,7 +17,12 @@ MIRRORS = [  # Germany/EU hosts only
     "https://overpass.kumi.systems/api/interpreter",
 ]
 QUERY = """[out:json][timeout:180][bbox:29.4,34.2,33.4,35.95];
-node["highway"="speed_camera"]->.c;
+rel["type"="enforcement"]["enforcement"~"^(maxspeed|traffic_signals)$"]->.e;
+.e out body;
+node(r.e:"device")->.d;
+node["highway"="speed_camera"]->.s;
+node["enforcement"~"^(traffic_signals|red_light_camera)$"]->.r;
+(.s; .r; .d;)->.c;
 .c out body;
 way(around.c:40)["highway"]["maxspeed"];
 out tags geom;"""
@@ -62,11 +70,22 @@ URBAN_HW = {"residential", "living_street", "unclassified", "tertiary", "service
 
 
 def build(data):
-    nodes = [e for e in data["elements"] if e["type"] == "node"]
+    nodes = list({e["id"]: e for e in data["elements"] if e["type"] == "node"}.values())
+    rels = {}  # device node id -> enforcement relation tags
+    for r in data["elements"]:
+        if r["type"] == "relation":
+            for m in r.get("members", []):
+                if m["type"] == "node" and m.get("role") == "device":
+                    rels[m["ref"]] = r.get("tags", {})
     ways = [e for e in data["elements"] if e["type"] == "way" and e.get("geometry")]
     out = []
     for n in nodes:
-        t = n.get("tags", {})
+        rel = rels.get(n["id"], {})
+        t = {**rel, **n.get("tags", {})}
+        if n.get("tags", {}).get("highway") == "speed_camera" or rel.get("enforcement") == "maxspeed":
+            kind = "speed"
+        else:
+            kind = "red_light"
         limit, src, hw = parse_speed(t.get("maxspeed")), "camera", None
         best = None
         for w in ways:
@@ -88,7 +107,7 @@ def build(data):
         out.append({"id": n["id"], "lat": round(n["lat"], 6), "lon": round(n["lon"], 6),
                     "limit": limit, "limitSource": src, "direction": direction,
                     "urban": (limit is not None and limit <= 60) or hw in URBAN_HW,
-                    "name": t.get("name") or t.get("ref")})
+                    "kind": kind, "name": t.get("name") or t.get("ref")})
     return out
 
 
@@ -102,7 +121,8 @@ def main():
     with open(a.out, "w", encoding="utf-8") as f:
         json.dump(doc, f, ensure_ascii=False, indent=1)
     known = sum(c["limit"] is not None for c in cams)
-    print(f"{len(cams)} cameras, {known} with speed limit -> {a.out}")
+    red = sum(c["kind"] == "red_light" for c in cams)
+    print(f"{len(cams)} cameras ({red} red-light), {known} with speed limit -> {a.out}")
 
 
 if __name__ == "__main__":

@@ -28,6 +28,14 @@ class DataFilesTest {
         assertTrue(p.forExcess(51, false)!!.court)
     }
 
+    @Test fun busLanesAndRoadsPassValidation() {
+        DataUpdate.validate(Database.BUS_LANES, data(Database.BUS_LANES))
+        DataUpdate.validate(Database.ROADS, data(Database.ROADS))
+        // Ayalon (road 20) near HaShalom, north-bound: a tagged motorway-class limit, not the urban default.
+        val m = Roads.parse(data(Database.ROADS)).at(32.0735, 34.7930, 20.0)
+        assertTrue(m != null && m.limit >= 80)
+    }
+
     @Test(expected = Exception::class) fun truncatedDownloadIsRejected() {
         val text = data(Database.CAMERAS)
         DataUpdate.validate(Database.CAMERAS, text.substring(0, text.length / 2))

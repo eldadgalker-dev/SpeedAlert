@@ -1,18 +1,25 @@
 # SpeedAlert
 
-Android app (Kotlin) that warns by voice, in Hebrew and at full media volume,
-when the car approaches a speed camera in Israel.
+Android app (Kotlin) that warns by voice, in Hebrew and at maximum volume, about speed and
+red-light cameras, bus-lane enforcement and speeding in Israel.
 
 ## What it does
 
 - Foreground service follows GPS once per second: position, speed, heading.
-- A camera counts only when it is within 500 m, ahead (within 35° of the heading),
-  and not facing across the road.
-- First alert at ≤ 500 m; a second alert at ≤ 200 m only if still above the limit.
-- Speeding: "מצלמת מהירות בעוד 480 מטר. הורד 14 קילומטר לשעה. קנס 250 שקלים, ללא נקודות."
-- Within the limit: "מצלמת מהירות בעוד 480 מטר. מהירות מותרת 90."
-- Media volume is raised to maximum for the alert and restored afterwards; other
-  audio (Waze, music) is ducked.
+- A camera counts only when it is ahead (within 35° of the heading) and not facing across the road.
+- Speed camera: from 500 m before it the alert repeats without a break, with the current
+  distance and speed, until the camera is passed (also while stopped near it):
+  "מצלמת מהירות בעוד 480 מטר. מהירות נוכחית 120. מותרת 90. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות."
+- Red-light camera: once, 300 m before it: "מצלמת רמזור בעוד 280 מטר."
+- Bus-lane enforcement (Ministry of Transport sections on roads 4, 5, 443, 461, 471): once when
+  entering a section: "אכיפת נתיב תחבורה ציבורית בכביש 443. אסור לנסוע בנתיב התחבורה הציבורית."
+- Speeding without a camera: 30 km/h or more above the limit of the road under the car
+  (3 fixes in a row), repeated while it lasts: "חריגת מהירות. מהירות נוכחית 82. מותרת 50. ..."
+- Audio: alarm stream (plays in silent and vibrate mode), unmuted and set to maximum together
+  with the media stream for as long as an alert is due, then restored; other audio is ducked.
+  "Do not disturb" in total-silence mode blocks even alarms; the app shows a warning then.
+- Not covered: mobile police cameras (no public source), parking cameras (Tel Aviv publishes
+  street addresses only, no positions yet).
 
 ## Updates
 
@@ -32,7 +39,9 @@ when the car approaches a speed camera in Israel.
 
 | File | Content | Source |
 |---|---|---|
-| `cameras.json` | Camera positions, speed limit, direction, urban flag | OpenStreetMap (ODbL) via Overpass; `tools/fetch_cameras.py` |
+| `cameras.json` | Speed and red-light cameras: position, kind, speed limit, direction, urban flag | OpenStreetMap (ODbL) via Overpass; `tools/fetch_cameras.py` |
+| `roads.txt`, `roads.version` | Speed limit per road segment (OSM `maxspeed`; untagged residential = 50), sha256 | OpenStreetMap via Overpass; `tools/fetch_roads.py`, weekly `.github/workflows/roads.yml` |
+| `buslanes.json` | Bus-lane enforcement sections (both ends) | Ministry of Transport, gov.il/he/pages/citizen_cameras |
 | `penalties.json` | Fine and points by km/h over the limit, urban / interurban | צו התעבורה (עבירות קנס) items 75-78א and the points table of תקנות התעבורה; verified 2026-10-28 (sources in the file) |
 
 Speed limit per camera: the camera's own `maxspeed` tag, else the nearest road

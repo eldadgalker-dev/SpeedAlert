@@ -10,7 +10,13 @@ data class Camera(
     val limit: Int?,        // km/h, null when unknown
     val direction: Double?, // degrees, null when unknown
     val urban: Boolean,
-)
+    val kind: Kind = Kind.SPEED,
+) {
+    enum class Kind { SPEED, RED_LIGHT }
+}
+
+/** A road section with bus-lane enforcement cameras, from end [a] to end [b] (data/buslanes.json). */
+data class BusLane(val name: String, val aLat: Double, val aLon: Double, val bLat: Double, val bLon: Double)
 
 data class Penalty(val fine: Int, val points: Int, val court: Boolean)
 
@@ -19,6 +25,19 @@ class Penalties(private val urban: List<Band>, private val interurban: List<Band
 
     fun forExcess(overKmh: Int, urbanRoad: Boolean): Penalty? =
         (if (urbanRoad) urban else interurban).firstOrNull { overKmh in it.from..it.to }?.penalty
+
+    /** "הוֹרֵד N קילומטר לשעה." plus the fine and points, as spoken. */
+    fun spoken(overKmh: Int, urbanRoad: Boolean): String {
+        val p = forExcess(overKmh, urbanRoad)
+        val tail = when {
+            p == null -> ""
+            p.court -> " הזמנה לדין, ${p.points} נקודות ופסילה."
+            p.points == 0 -> " קנס ${p.fine} שקלים, ללא נקודות."
+            else -> " קנס ${p.fine} שקלים ועוד ${p.points} נקודות."
+        }
+        // Niqqud: without it TTS reads "הורד" as "ורד" (rose).
+        return "הוֹרֵד $overKmh קילומטר לשעה.$tail"
+    }
 
     companion object {
         fun parse(json: String): Penalties {
@@ -42,10 +61,25 @@ class Penalties(private val urban: List<Band>, private val interurban: List<Band
 object Database {
     const val CAMERAS = "cameras.json"
     const val PENALTIES = "penalties.json"
+    const val BUS_LANES = "buslanes.json"
+    const val ROADS = "roads.txt"
 
     fun cameras(ctx: Context): List<Camera> = parseCameras(read(ctx, CAMERAS))
 
     fun penalties(ctx: Context) = Penalties.parse(read(ctx, PENALTIES))
+
+    fun busLanes(ctx: Context): List<BusLane> = parseBusLanes(read(ctx, BUS_LANES))
+
+    fun roads(ctx: Context): Roads = Roads.parse(read(ctx, ROADS))
+
+    fun parseBusLanes(json: String): List<BusLane> {
+        val a = JSONObject(json).getJSONArray("sections")
+        return (0 until a.length()).map { i ->
+            val o = a.getJSONObject(i)
+            val from = o.getJSONArray("from"); val to = o.getJSONArray("to")
+            BusLane(o.getString("road"), from.getDouble(0), from.getDouble(1), to.getDouble(0), to.getDouble(1))
+        }
+    }
 
     fun parseCameras(json: String): List<Camera> {
         val a = JSONObject(json).getJSONArray("cameras")
@@ -58,6 +92,7 @@ object Database {
                 limit = if (c.isNull("limit")) null else c.getInt("limit"),
                 direction = if (c.isNull("direction")) null else c.getDouble("direction"),
                 urban = c.optBoolean("urban", false),
+                kind = if (c.optString("kind") == "red_light") Camera.Kind.RED_LIGHT else Camera.Kind.SPEED,
             )
         }
     }

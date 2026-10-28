@@ -39,19 +39,37 @@ object Http {
 object DataUpdate {
     const val INTERVAL_MS = 30 * 60_000L
 
-    /** Downloads both files, keeps them only when they parse; returns true when anything changed. */
+    /**
+     * Downloads the tables, keeps them only when they parse; returns true when anything changed.
+     * roads.txt (~9 MB) is downloaded only when roads.version (its sha256) changed.
+     */
     fun run(ctx: Context): Boolean {
         var changed = false
-        for (name in listOf(Database.CAMERAS, Database.PENALTIES)) {
+        for (name in listOf(Database.CAMERAS, Database.PENALTIES, Database.BUS_LANES)) {
             val text = Http.text("${BuildConfig.DATA_URL}/$name")
             validate(name, text)
             if (text == Database.read(ctx, name)) continue
-            val tmp = File(ctx.filesDir, "$name.${Thread.currentThread().id}.tmp")
-            tmp.writeText(text, Charsets.UTF_8)
-            if (!tmp.renameTo(File(ctx.filesDir, name))) throw IOException("cannot save $name")
+            save(ctx, name, text)
+            changed = true
+        }
+        val version = Http.text("${BuildConfig.DATA_URL}/$ROADS_VERSION").trim().lowercase()
+        if (version != runCatching { Database.read(ctx, ROADS_VERSION).trim() }.getOrNull()) {
+            val roads = Http.text("${BuildConfig.DATA_URL}/${Database.ROADS}")
+            val sha = MessageDigest.getInstance("SHA-256").digest(roads.toByteArray(Charsets.UTF_8))
+                .joinToString("") { "%02x".format(it) }
+            if (sha != version) throw IOException("roads.txt does not match roads.version")
+            validate(Database.ROADS, roads)
+            save(ctx, Database.ROADS, roads)
+            save(ctx, ROADS_VERSION, version)
             changed = true
         }
         return changed
+    }
+
+    private fun save(ctx: Context, name: String, text: String) {
+        val tmp = File(ctx.filesDir, "$name.${Thread.currentThread().id}.tmp")
+        tmp.writeText(text, Charsets.UTF_8)
+        if (!tmp.renameTo(File(ctx.filesDir, name))) throw IOException("cannot save $name")
     }
 
     /** A truncated or broken download must never replace a working table. */
@@ -61,10 +79,14 @@ object DataUpdate {
             Database.PENALTIES -> Penalties.parse(text).let { p ->
                 require(p.forExcess(25, true) != null && p.forExcess(25, false) != null) { "penalty table incomplete" }
             }
+            Database.BUS_LANES -> require(Database.parseBusLanes(text).isNotEmpty()) { "no bus lanes" }
+            Database.ROADS -> require(Roads.parse(text).segments >= MIN_ROAD_SEGMENTS) { "too few roads" }
         }
     }
 
     private const val MIN_CAMERAS = 50
+    private const val MIN_ROAD_SEGMENTS = 100_000
+    private const val ROADS_VERSION = "roads.version"
 }
 
 /** Release contract (release.yml): latest Release has SpeedAlert.apk and version.json {versionCode, versionName, sha256}. */
