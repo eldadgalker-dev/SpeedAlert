@@ -33,7 +33,7 @@ class CameraWatcherTest {
     @Test fun alertsWhenApproachingAndSpeeding() {
         val alerts = drive(watcher(cam), 31.9990, 32.0010, 120.0)
         assertEquals(1, alerts.size)
-        assertEquals("מצלמת מהירות בעוד 480 מטר. הורד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות.", alerts[0])
+        assertEquals("מצלמת מהירות בעוד 480 מטר. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות.", alerts[0])
     }
 
     @Test fun secondAlertOnlyWhenStillSpeeding() {

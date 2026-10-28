@@ -55,6 +55,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         tts = TextToSpeech(this, this)
         startInForeground()
         running = true
+        startedAt = System.currentTimeMillis()
+        startBattery = Usage.batteryLevel(this)
         status = "פועל. ${cameras.size} מצלמות במאגר."
         startLocation()
         main.post(dataCheck)
@@ -79,7 +81,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_TEST) {
-            speak("בדיקה. מצלמת מהירות בעוד 500 מטר. הורד 12 קילומטר לשעה. קנס 250 שקלים, ללא נקודות.")
+            speak("בדיקה. מצלמת מהירות בעוד 500 מטר. הוֹרֵד 12 קילומטר לשעה. קנס 250 שקלים, ללא נקודות.")
         }
         return START_STICKY
     }
@@ -90,6 +92,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         tts.shutdown()
         restoreVolume()
         running = false
+        speed = -1.0
         status = "מופסק"
         super.onDestroy()
     }
@@ -118,7 +121,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private fun onLocation(loc: Location) {
         val speedKmh = if (loc.hasSpeed()) loc.speed * 3.6 else 0.0
         val heading = if (loc.hasBearing() && speedKmh >= CameraWatcher.MIN_SPEED_KMH) loc.bearing.toDouble() else null
-        status = "מהירות ${speedKmh.toInt()} קמ\"ש" + (heading?.let { ", כיוון ${it.toInt()}°" } ?: "")
+        speed = speedKmh
+        status = if (heading == null) "ממתין לתנועה" else "בנסיעה, כיוון ${heading.toInt()}°"
         watcher.onLocation(loc.latitude, loc.longitude, speedKmh, heading)?.let {
             lastAlert = it
             speak(it)
@@ -182,6 +186,9 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         @Volatile var status = "מופסק"
         @Volatile var lastAlert = ""
         @Volatile var dataInfo = ""
+        @Volatile var speed = -1.0          // km/h; -1 when not running
+        @Volatile var startedAt = 0L
+        @Volatile var startBattery = -1
 
         fun start(ctx: Context, action: String? = null) =
             ContextCompat.startForegroundService(ctx, Intent(ctx, AlertService::class.java).setAction(action))

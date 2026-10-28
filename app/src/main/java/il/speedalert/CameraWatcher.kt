@@ -92,7 +92,8 @@ class CameraWatcher(
             p.points == 0 -> " קנס ${p.fine} שקלים, ללא נקודות."
             else -> " קנס ${p.fine} שקלים ועוד ${p.points} נקודות."
         }
-        return "$head הורד $over קילומטר לשעה.$tail"
+        // Niqqud: without it TTS reads "הורד" as "ורד" (rose).
+        return "$head הוֹרֵד $over קילומטר לשעה.$tail"
     }
 
     companion object {

@@ -24,6 +24,9 @@
   ol, ul { padding-inline-start: 1.4rem; }
   li { margin-bottom: 6px; }
   code, .en { font-family: Consolas, monospace; }
+  .qr { margin: 8px 0 0; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .qr img { background: #fff; padding: 8px; border-radius: 10px; border: 1px solid var(--line); }
+  .qr figcaption { color: var(--muted); flex: 1 1 220px; }
   footer { margin-top: 3rem; color: var(--muted); font-size: .9rem; }
 </style>
 </head>
@@ -33,6 +36,11 @@
   <p class="lead">התראה קולית בעברית בהתקרבות למצלמת מהירות: מרחק, כמה להאט, קנס ונקודות.</p>
 
   <a class="btn" href="https://github.com/eldadgalker-dev/SpeedAlert/releases/latest/download/SpeedAlert.apk">הורדת האפליקציה (<span lang="en" dir="ltr">APK</span>)</a>
+
+  <figure class="qr">
+    <img src="qr-download.svg" width="180" height="180" alt="קוד QR להורדת SpeedAlert">
+    <figcaption>צפייה בדף מהמחשב? סרוק את הקוד במצלמת הטלפון כדי להוריד את האפליקציה, ואז המשך לפי השלבים למטה.</figcaption>
+  </figure>
 
   <h2>התקנה ראשונה</h2>
   <ol>
@@ -58,7 +66,7 @@
 
   <h2>עדכון גרסת האפליקציה</h2>
   <ol>
-    <li>במסך הראשי לחץ "בדוק עדכון גרסה".</li>
+    <li>במסך הראשי לחץ "בדוק עדכון".</li>
     <li>בפעם הראשונה תתבקש לאשר ל-SpeedAlert להתקין אפליקציות. אשר, חזור ולחץ שוב.</li>
     <li>אם יש גרסה חדשה, היא תורד, תיבדק (חתימת <span lang="en" dir="ltr">SHA-256</span>) ומסך ההתקנה ייפתח.</li>
   </ol>

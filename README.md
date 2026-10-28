@@ -23,7 +23,7 @@ when the car approaches a speed camera in Israel.
   (or the one packed in the APK) stays in use.
 - **App:** `.github/workflows/release.yml` builds a signed APK on every app change to `main` and
   publishes Release `v<speed.versionBase>.<run>` with `SpeedAlert.apk` and `version.json`.
-  The "בדוק עדכון גרסה" button downloads it, checks SHA-256 and opens the installer.
+  The "בדוק עדכון" button downloads it, checks SHA-256 and opens the installer.
   Needs repository secrets `SPEED_KEYSTORE_B64`, `SPEED_KEYSTORE_PASSWORD`, `SPEED_KEY_ALIAS`,
   `SPEED_KEY_PASSWORD` (keystore kept outside the repository).
 - **Install page:** `docs/index.html` (GitHub Pages from `/docs`).
