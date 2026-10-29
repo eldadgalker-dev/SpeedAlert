@@ -108,6 +108,22 @@ class CameraWatcherTest {
         assertNull(w.onLocation(32.002, 34.8031, 80.0, 0.0))         // 290 m off the road
     }
 
+    @Test fun speedingUsesTheFasterRoadBesideARamp() {
+        // Field report 2026-10-29: a 50 km/h ramp 8 m from the car, the 90 km/h highway 12 m away.
+        val roads = Roads.parse(listOf("90 0 3200000 3480000 1000 0", "50 1 3200000 3480015 1000 0",
+            "0 0 3200000 3490000 1000 0").joinToString("\n"))
+        assertEquals(90, roads.at(32.002, 34.80008, 0.0)!!.limit)
+        val w = SpeedingWatcher(penalties).apply { this.roads = roads }
+        repeat(5) { assertNull(w.onLocation(32.002, 34.80008, 100.0, 0.0)) }
+        // Unknown limit (0) on the road: no alert at any speed.
+        assertNull(roads.at(32.002, 34.9, 0.0))
+    }
+
+    @Test fun israeliDate() {
+        assertEquals("28.10.2026", Database.israeliDate("2026-10-28"))
+        assertEquals("?", Database.israeliDate("?"))
+    }
+
     @Test fun busLaneAnnouncedOnceOnEntry() {
         val lane = BusLane("כביש 9", 32.0100, 34.8, 32.0300, 34.8)
         val w = BusLaneWatcher(listOf(lane))

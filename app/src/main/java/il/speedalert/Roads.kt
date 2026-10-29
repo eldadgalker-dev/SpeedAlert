@@ -18,11 +18,18 @@ class Roads private constructor(
 
     val segments get() = lat1.size
 
-    /** The nearest road within [MATCH_M] that runs along [heading] (either way), or null. */
+    /**
+     * The road under the car: of the roads within [MATCH_M] that run along [heading] (either way),
+     * the one with the highest limit, since a ramp or service street beside a highway is closer
+     * than the highway's centre line when driving in its outer lane (field report 2026-10-29,
+     * "50" in the middle of the Ayalon). Null when none, or when one of them has an unknown
+     * limit (0): then the limit cannot be told.
+     */
     fun at(lat: Double, lon: Double, heading: Double): Match? {
         val k = cos(Math.toRadians(lat)) * 1.1132  // metres per 1e-5 degree of longitude
         val px = lon * 1e5; val py = lat * 1e5
         var best = -1; var bestD = MATCH_M
+        var unknown = false
         val cx = cell(lon); val cy = cell(lat)
         for (dx in -1..1) for (dy in -1..1) {
             val segs = grid[key(cx + dx, cy + dy)] ?: continue
@@ -34,14 +41,16 @@ class Roads private constructor(
                 if (len2 < 1.0) continue
                 val t = (-(ax * ex + ay * ey) / len2).coerceIn(0.0, 1.0)
                 val d = hypot(ax + t * ex, ay + t * ey)
-                if (d >= bestD) continue
+                if (d >= MATCH_M) continue
                 val bearing = (Math.toDegrees(kotlin.math.atan2(ex, ey)) + 360) % 360
                 val diff = Geo.angleDiff(heading, bearing)
                 if (diff > ALONG_DEG && diff < 180 - ALONG_DEG) continue
-                best = s; bestD = d
+                val lim = limits[way[s]]
+                if (lim == 0) unknown = true
+                if (best < 0 || lim > limits[way[best]] || (lim == limits[way[best]] && d < bestD)) { best = s; bestD = d }
             }
         }
-        if (best < 0) return null
+        if (best < 0 || unknown) return null
         val w = way[best]
         return Match(limits[w], urban[w], bestD)
     }

@@ -47,6 +47,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private val saved = mutableMapOf<Int, Int>()   // stream -> volume before the alert
     private var focus: AudioFocusRequest? = null
     private val fused by lazy { LocationServices.getFusedLocationProviderClient(this) }
+    private var lastDriving = 0L                    // last fix at driving speed
+    private var savingFrom: Location? = null        // first fix in power-saving mode
 
     private val callback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
@@ -103,6 +105,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     override fun onDestroy() {
         main.removeCallbacks(dataCheck)
         fused.removeLocationUpdates(callback)
+        markMode(null)
         tts.shutdown()
         restoreVolume()
         running = false
@@ -130,6 +133,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
 
     private fun onLocation(loc: Location) {
         val speedKmh = if (loc.hasSpeed()) loc.speed * 3.6 else 0.0
+        if (powerSaving(loc, speedKmh)) return
         val heading = if (loc.hasBearing() && speedKmh >= CameraWatcher.MIN_SPEED_KMH) loc.bearing.toDouble() else null
         speed = speedKmh
         status = when {
@@ -204,6 +208,33 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         focus = null
     }
 
+    /**
+     * Saves power when not driving (user request 2026-10-29): after [IDLE_AFTER_MS] below
+     * [DRIVING_KMH] with no alert due, GPS is switched off and a balanced (network) fix every
+     * [SAVING_INTERVAL_MS] only watches for the car to move; after [WAKE_M] of movement, or at a
+     * driving speed, full-accuracy GPS once a second comes back. Returns true while saving.
+     */
+    private fun powerSaving(loc: Location, speedKmh: Double): Boolean {
+        val now = System.currentTimeMillis()
+        if (saving) {
+            val from = savingFrom ?: run { savingFrom = loc; return true }
+            if (speedKmh < DRIVING_KMH && from.distanceTo(loc) <= WAKE_M) return true
+            lastDriving = now
+            requestLocation(saving = false)
+            status = "ממתין לתנועה"
+            return false
+        }
+        if (speedKmh >= DRIVING_KMH || lastDriving == 0L) lastDriving = now
+        if (now - lastDriving > IDLE_AFTER_MS && once.isEmpty() && !(ttsReady && tts.isSpeaking)) {
+            requestLocation(saving = true)
+            speed = 0.0
+            status = "חיסכון בחשמל: לא בנסיעה. ההתראות יחזרו כשהרכב יזוז."
+            if (ttsReady) restoreVolume()
+            return true
+        }
+        return false
+    }
+
     private fun startLocation() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED) {
@@ -211,9 +242,16 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
             stopSelf()
             return
         }
-        val req = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000L)
-            .setMinUpdateIntervalMillis(500L)
-            .build()
+        requestLocation(saving = false)
+    }
+
+    /** Switches between full-accuracy GPS once a second and the power-saving balanced mode. */
+    private fun requestLocation(saving: Boolean) {
+        markMode(saving)
+        savingFrom = null
+        val req = if (saving) LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, SAVING_INTERVAL_MS).build()
+            else LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000L).setMinUpdateIntervalMillis(500L).build()
+        fused.removeLocationUpdates(callback)
         fused.requestLocationUpdates(req, callback, Looper.getMainLooper())
     }
 
@@ -251,6 +289,27 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         @Volatile var speed = -1.0          // km/h; -1 when not running
         @Volatile var startedAt = 0L
         @Volatile var startBattery = -1
+        @Volatile var saving = false        // power-saving location mode (not driving)
+        @Volatile private var modeSince = 0L
+        @Volatile private var gpsTotal = 0L
+        @Volatile private var savingTotal = 0L
+        private const val DRIVING_KMH = 15.0
+        private const val IDLE_AFTER_MS = 3 * 60_000L
+        private const val SAVING_INTERVAL_MS = 15_000L
+        private const val WAKE_M = 80f
+
+        /** Closes the time of the current location mode; [next] null when location stops. */
+        private fun markMode(next: Boolean?) {
+            val now = System.currentTimeMillis()
+            if (modeSince > 0) { if (saving) savingTotal += now - modeSince else gpsTotal += now - modeSince }
+            modeSince = if (next == null) 0L else now
+            saving = next ?: false
+        }
+
+        /** Time with full-accuracy GPS on, ms, in this process. */
+        fun gpsMs() = gpsTotal + if (!saving && modeSince > 0) System.currentTimeMillis() - modeSince else 0
+        /** Time in power-saving location mode, ms, in this process. */
+        fun savingMs() = savingTotal + if (saving && modeSince > 0) System.currentTimeMillis() - modeSince else 0
 
         fun start(ctx: Context, action: String? = null) =
             ContextCompat.startForegroundService(ctx, Intent(ctx, AlertService::class.java).setAction(action))

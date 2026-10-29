@@ -3,8 +3,10 @@
 
 Used by the app to warn when driving 30 km/h or more above the limit where there is no camera.
 A road is kept when it has a numeric maxspeed tag; an untagged residential street gets the
-urban default of 50 km/h (Traffic Regulations, reg. 54). Other untagged roads are left out:
-their limit cannot be told from OSM alone, and a guessed limit would give false alerts.
+urban default of 50 km/h (Traffic Regulations, reg. 54). Other untagged main roads are kept
+with limit 0 (unknown): the app never alerts on them, and they stop a nearby street or ramp from
+being matched instead (field report 2026-10-29: "50" in the middle of the Ayalon). Minor untagged
+roads are left out.
 
 Output, one way per line: `limit urban lat lon dlat dlon ...` (coordinates in 1e-5 degrees,
 deltas from the previous point), geometry simplified to 5 m.
@@ -22,6 +24,7 @@ from fetch_cameras import MIRRORS, parse_speed, URBAN_HW  # noqa: E402
 import time, urllib.parse, urllib.request
 
 CLASSES = "motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street"
+MAIN = {"motorway", "trunk", "primary", "secondary", "tertiary"}
 QUERY = f"""[out:json][timeout:600][bbox:29.4,34.2,33.4,35.95];
 way["highway"~"^({CLASSES})(_link)?$"];
 out tags geom;"""
@@ -49,8 +52,11 @@ def limit_of(tags):
     v = parse_speed(tags.get("maxspeed"))
     if v is not None:
         return v
-    if tags.get("highway") == "residential":
+    hw = tags.get("highway", "")
+    if hw == "residential":
         return 50
+    if hw.removesuffix("_link") in MAIN:
+        return 0  # unknown: blocks the match, never alerts
     return None
 
 
@@ -85,7 +91,7 @@ def build(data):
             continue
         t = w.get("tags", {})
         limit = limit_of(t)
-        if limit is None or not 5 <= limit <= 130:
+        if limit is None or not (limit == 0 or 5 <= limit <= 130):
             continue
         hw = t.get("highway", "").removesuffix("_link")
         urban = limit <= 60 or hw in URBAN_HW

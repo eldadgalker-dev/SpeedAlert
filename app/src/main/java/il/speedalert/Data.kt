@@ -99,7 +99,12 @@ object Database {
     }
 
     /** Date of the data in use ("fetched" field), for the status line. */
-    fun fetched(ctx: Context): String = JSONObject(read(ctx, CAMERAS)).optString("fetched", "?")
+    fun fetched(ctx: Context): String = israeliDate(JSONObject(read(ctx, CAMERAS)).optString("fetched", "?"))
+
+    /** "2026-10-28" -> "28.10.2026" (he-IL short date); anything else is returned as is. */
+    fun israeliDate(iso: String): String =
+        runCatching { java.time.LocalDate.parse(iso.take(10)).format(java.time.format.DateTimeFormatter.ofPattern("dd.MM.yyyy")) }
+            .getOrDefault(iso)
 
     fun read(ctx: Context, name: String): String {
         val local = java.io.File(ctx.filesDir, name)

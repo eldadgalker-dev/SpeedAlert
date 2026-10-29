@@ -161,15 +161,13 @@ class MainActivity : Activity() {
         val level = Usage.batteryLevel(this)
         val charging = Usage.charging(this)
         info.getValue(K_BATTERY).text = "$level%" + if (charging) " (בטעינה)" else ""
-        val drain = if (running) Usage.drainPerHour(AlertService.startBattery, level, AlertService.startedAt, charging) else null
+        val drain = Usage.appDrainPerHour(this, AlertService.gpsMs(), AlertService.savingMs())
         info.getValue(K_DRAIN).text = when {
-            !running -> "ההתראות מופסקות"
-            charging -> "בטעינה"
-            drain == null -> "נמדד (נדרשות 10 דקות)"
-            else -> "%.1f%% לשעה (כל הטלפון)".format(drain)
+            drain == null -> "נמדד…"
+            else -> "%.1f%% לשעה, הערכה".format(drain) + if (running && AlertService.saving) " (חיסכון: לא בנסיעה)" else ""
         }
         info.getValue(K_MEMORY).text = "${Usage.memoryMb(this)} MB"
-        info.getValue(K_CPU).text = "%.1f%% בממוצע".format(Usage.cpuPercent())
+        info.getValue(K_CPU).text = "%.1f%% מהמעבד, בממוצע".format(Usage.cpuPercent())
         info.getValue(K_UPTIME).text = if (running) minutes(System.currentTimeMillis() - AlertService.startedAt) else "–"
         info.getValue(K_DATA).text = AlertService.dataInfo.ifEmpty { "בודק…" }
         info.getValue(K_VERSION).text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
@@ -299,9 +297,9 @@ class MainActivity : Activity() {
         private const val GREEN = 0xFF2E7D32.toInt()
         private const val GREY = 0xFF757575.toInt()
         private const val K_BATTERY = "סוללה"
-        private const val K_DRAIN = "צריכת סוללה"
+        private const val K_DRAIN = "סוללה (האפליקציה)"
         private const val K_MEMORY = "זיכרון האפליקציה"
-        private const val K_CPU = "מעבד"
+        private const val K_CPU = "מעבד (האפליקציה)"
         private const val K_UPTIME = "זמן פעילות"
         private const val K_DATA = "מאגר מצלמות"
         private const val K_VERSION = "גרסת תוכנה"
