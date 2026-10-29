@@ -51,9 +51,10 @@ jobs:
           if cmp -s "$RUNNER_TEMP/roads/roads.version" data/roads.version; then
             echo "Roads unchanged"; echo "changed=false" >> "$out"; exit 0
           fi
-          n=$(grep -vc '^#' "$new"); o=$(grep -vc '^#' data/roads.txt)
-          # A partial Overpass answer must never wipe the table.
-          if [ "$n" -lt $(( o * 8 / 10 )) ]; then
+          # Roads with a known limit (first field not 0); unknown ones must not mask a loss.
+          n=$(grep -v '^#' "$new" | grep -vc '^0 '); o=$(grep -v '^#' data/roads.txt | grep -vc '^0 ')
+          # A partial Overpass answer must never thin the table (2026-10-29: 2,000 streets lost).
+          if [ "$n" -lt $(( o * 99 / 100 )) ]; then
             echo "::error::Refusing update: $n roads vs $o"; exit 1
           fi
           echo "Roads changed: $o -> $n"; echo "changed=true" >> "$out"

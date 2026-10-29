@@ -40,7 +40,11 @@ def fetch():
             req = urllib.request.Request(url, body, {"User-Agent": "SpeedAlert/0.4 (personal app)",
                                                      "Accept": "application/json"})
             with urllib.request.urlopen(req, timeout=900) as r:
-                return json.load(r)
+                data = json.load(r)
+            # Overpass answers 200 with a partial result and a "remark" on timeout or memory errors.
+            if "error" in data.get("remark", "").lower():
+                raise RuntimeError(data["remark"][:200])
+            return data
         except Exception as e:
             print(f"attempt {attempt + 1} {url}: {e}", file=sys.stderr)
             time.sleep(delay)
