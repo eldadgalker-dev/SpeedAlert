@@ -2,14 +2,16 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp" android:height="24dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <!-- speed camera on a wall mount sending waves at a car seen from the front -->
+    <!-- front-facing speed camera on an arm sending waves at a car seen from the front -->
     <group android:scaleX="1.4" android:scaleY="1.4" android:pivotX="54" android:pivotY="54">
+        <group android:translateX="-3" android:translateY="2">
         <path android:strokeColor="#FFFFFF" android:strokeAlpha="1.0" android:strokeWidth="3" android:strokeLineCap="round" android:pathData="M64.4,42.8 A6,6 0 0,1 60.2,38.6" />
         <path android:strokeColor="#FFFFFF" android:strokeAlpha="0.75" android:strokeWidth="3" android:strokeLineCap="round" android:pathData="M63.2,47.6 A11,11 0 0,1 55.4,39.8" />
         <path android:strokeColor="#FFFFFF" android:strokeAlpha="0.5" android:strokeWidth="3" android:strokeLineCap="round" android:pathData="M61.9,52.5 A16,16 0 0,1 50.5,41.1" />
-        <group android:scaleX="0.75" android:scaleY="0.75" android:translateX="18" android:translateY="8.75">
-            <group android:rotation="-25" android:pivotX="72" android:pivotY="31"><path android:fillColor="#FFFFFF" android:fillType="evenOdd" android:pathData="M60,24 h24 v2.5 h-24 z M62,27 h18 a2,2 0 0,1 2,2 v7 a2,2 0 0,1 -2,2 h-18 z M66,32.5 m-2.5,0 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 z" /></group>
-            <path android:strokeColor="#FFFFFF" android:strokeWidth="2.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M77,37 L79,43 L86,43" />
+        </group>
+        <group android:scaleX="1" android:scaleY="1" android:translateX="0" android:translateY="0">
+            <path android:fillColor="#FFFFFF" android:fillType="evenOdd" android:pathData="M63,25 h10 a3,3 0 0,1 3,3 v9 a3,3 0 0,1 -3,3 h-10 a3,3 0 0,1 -3,-3 v-9 a3,3 0 0,1 3,-3 z M68,32.5 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0 z M68,32.5 m-2.2,0 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0 z M73.5,27.7 m-0.9,0 a0.9,0.9 0 1,0 1.8,0 a0.9,0.9 0 1,0 -1.8,0 z" />
+            <path android:strokeColor="#FFFFFF" android:strokeWidth="2.5" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M68,40 V44 H79" />
         </group>
         <group android:scaleX="0.72" android:scaleY="0.72" android:translateX="12.9" android:translateY="18.6">
             <path android:fillColor="#FFFFFF" android:fillType="evenOdd" android:pathData="M32,52 L60,52 Q63,52 64,55 L67,62 L25,62 L28,55 Q29,52 32,52 Z M33,55 L59,55 L62,61 L30,61 Z" />
