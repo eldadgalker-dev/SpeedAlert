@@ -54,7 +54,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8: unused code and resources removed, less code mapped in memory (user request 2026-10-29).
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
             if (hasReleaseSigning) signingConfig = signingConfigs.getByName("release")
         }
     }

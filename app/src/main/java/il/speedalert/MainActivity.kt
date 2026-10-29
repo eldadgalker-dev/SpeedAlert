@@ -198,7 +198,7 @@ class MainActivity : Activity() {
             show(K_CPU, "%.2f%%".format(recent.cpuPercent), "מהמעבד כולו, ב-${recent.minutes} הדקות האחרונות")
         }
         // Memory info is a slow system call: every 10th refresh only.
-        if (renders++ % 10 == 0) show(K_MEMORY, "${Usage.memoryMb(this)} MB")
+        if (renders++ % 10 == 0) show(K_MEMORY, "${Usage.memoryMb(this)} MB", "MB: ${Usage.memoryParts(this)}")
         show(K_UPTIME, if (running) minutes(System.currentTimeMillis() - AlertService.startedAt) else "–")
         show(K_DATA, AlertService.dataInfo.ifEmpty { "בודק…" }, AlertService.dataNote)
         val newer = AppUpdate.available

@@ -24,6 +24,15 @@ object Usage {
         return info.totalPss / 1024
     }
 
+    /** Where the memory goes (MB): Java and native heap, code, graphics, rest; the Android summary rows. */
+    fun memoryParts(ctx: Context): String {
+        val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val info: Debug.MemoryInfo = am.getProcessMemoryInfo(intArrayOf(Process.myPid()))[0]
+        fun mb(k: String) = (info.getMemoryStat("summary.$k")?.toIntOrNull() ?: 0) / 1024
+        return "Java ${mb("java-heap")}, Native ${mb("native-heap")}, קוד ${mb("code")}, " +
+            "גרפיקה ${mb("graphics")}, מחסנית ${mb("stack")}, אחר ${mb("private-other") + mb("system")}"
+    }
+
     /** CPU, GPS and saving-mode time at one moment, ms. */
     private class Sample(val at: Long, val cpu: Long, val gps: Long, val saving: Long)
     private val samples = ArrayDeque<Sample>()
