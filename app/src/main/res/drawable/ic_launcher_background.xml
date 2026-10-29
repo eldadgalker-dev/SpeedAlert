@@ -1,0 +1,4 @@
+<!-- Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/ -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient android:angle="315" android:startColor="#E53935" android:endColor="#8E0000" />
+</shape>

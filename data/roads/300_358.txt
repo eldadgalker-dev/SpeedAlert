@@ -1,0 +1,2 @@
+# OpenStreetMap contributors (ODbL), via Overpass API; ways 316294
+90 0 3011856 3587142 -3490 1824 -6367 2903

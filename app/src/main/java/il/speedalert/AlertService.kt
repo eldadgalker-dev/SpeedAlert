@@ -48,6 +48,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private lateinit var speeding: SpeedingWatcher
     private lateinit var busLanes: BusLaneWatcher
     private lateinit var average: AverageSpeedWatcher
+    private lateinit var roadTiles: RoadTiles
+    private var notifiedVersion = 0
     private val once = ArrayDeque<String>()          // one-time alerts waiting for the voice
     private var beepsUntil = 0L                      // the voice waits for the beeps to end
     private lateinit var tts: TextToSpeech
@@ -81,7 +83,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         speeding = SpeedingWatcher(Database.penalties(this))
         busLanes = BusLaneWatcher(runCatching { Database.busLanes(this) }.getOrDefault(emptyList()))
         average = AverageSpeedWatcher(runCatching { Database.sections(this) }.getOrDefault(emptyList()))
-        Thread { runCatching { speeding.roads = Database.roads(this) } }.start()
+        roadTiles = RoadTiles(this)
+        speeding.roads = roadTiles
         tts = TextToSpeech(this, this)
         startInForeground()
         running = true
@@ -134,9 +137,11 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
                     speeding.penalties = Database.penalties(this@AlertService)
                     runCatching { busLanes.lanes = Database.busLanes(this@AlertService) }
                     runCatching { average.sections = Database.sections(this@AlertService) }
-                    if (changed.roads) runCatching { speeding.roads = Database.roads(this@AlertService) }
-                    dataInfo = "עודכן: ${cams.size} מצלמות (${Database.fetched(this@AlertService)})"
+                    if (changed.roads) roadTiles.reload()
+                    dataInfo = "${cams.size} מצלמות"
+                    dataNote = "עודכן, נתונים מ-${Database.fetched(this@AlertService)}"
                 }
+                runCatching { AppUpdate.check() }.getOrNull()?.let { main.post { notifyVersion(it) } }
             }.start()
             main.postDelayed(this, DataUpdate.INTERVAL_MS)
         }
@@ -290,7 +295,27 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         return false
     }
 
+    /** Tells once per version that a newer one is out; tapping opens the app (update button). */
+    private fun notifyVersion(r: RemoteVersion) {
+        if (r.versionCode == notifiedVersion) return
+        notifiedVersion = r.versionCode
+        val nm = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        nm.createNotificationChannel(NotificationChannel(UPDATES, "עדכוני גרסה", NotificationManager.IMPORTANCE_DEFAULT))
+        val open = PendingIntent.getActivity(this, 1, Intent(this, MainActivity::class.java), PendingIntent.FLAG_IMMUTABLE)
+        nm.notify(2, NotificationCompat.Builder(this, UPDATES)
+            .setSmallIcon(R.drawable.ic_notify)
+            .setContentTitle("גרסה ${r.versionName} זמינה")
+            .setContentText("פתח את SpeedAlert ולחץ \"בדיקת עדכון\".")
+            .setContentIntent(open).setAutoCancel(true).build())
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        if (saving) roadTiles.trim()
+    }
+
     private fun enterSaving() {
+        roadTiles.trim()   // not driving: no road tiles in memory
         val m = motion
         if (m != null && sensors.requestTriggerSensor(trigger, m)) {
             fused.removeLocationUpdates(callback)
@@ -344,7 +369,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         val open = PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE)
         val n: Notification = NotificationCompat.Builder(this, CHANNEL)
-            .setSmallIcon(R.drawable.ic_camera)
+            .setSmallIcon(R.drawable.ic_notify)
             .setContentTitle(getString(R.string.app_name))
             .setContentText(getString(R.string.running))
             .setContentIntent(open)
@@ -356,6 +381,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
 
     companion object {
         const val CHANNEL = "camera-alerts"
+        private const val UPDATES = "app-updates"
         const val ACTION_TEST = "il.speedalert.TEST"
         private const val BEEPS = 3
         private const val BEEP_MS = 180
@@ -368,6 +394,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         @Volatile var status = "מופסק"
         @Volatile var lastAlert = ""
         @Volatile var dataInfo = ""
+        @Volatile var dataNote = ""
         @Volatile var speed = -1.0          // km/h; -1 when not running
         @Volatile var startedAt = 0L
         @Volatile var startBattery = -1

@@ -1,0 +1,2 @@
+# OpenStreetMap contributors (ODbL), via Overpass API; ways 316294
+0 1 3048878 3409659 -393 1302 -17 82 -4 71 19 85 456 947 1628 2851

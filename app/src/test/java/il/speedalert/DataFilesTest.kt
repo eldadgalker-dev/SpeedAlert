@@ -31,10 +31,35 @@ class DataFilesTest {
 
     @Test fun busLanesAndRoadsPassValidation() {
         DataUpdate.validate(Database.BUS_LANES, data(Database.BUS_LANES))
-        DataUpdate.validate(Database.ROADS, data(Database.ROADS))
+        val index = data(RoadTiles.INDEX)
+        DataUpdate.validate(RoadTiles.INDEX, index)
+        // Every tile matches its sha256 in the index, as the app checks after a download.
+        for ((t, sha) in RoadTiles.parseIndex(index)) {
+            val bytes = File("../data/roads/$t.txt").readBytes()
+            val got = java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+            assertEquals(t, sha, got)
+        }
         // Ayalon (road 20) near HaShalom, north-bound: a tagged motorway-class limit, not the urban default.
-        val m = Roads.parse(data(Database.ROADS)).at(32.0735, 34.7930, 20.0)
+        val m = Roads.parse(data("roads/${RoadTiles.name(32.0735, 34.7930)}.txt")).at(32.0735, 34.7930, 20.0)
         assertTrue(m != null && m.limit >= 80)
+    }
+
+    @Test fun tilesAnswerLikeTheWholeTable() {
+        val whole = Roads.parse(data("roads.txt"))
+        val tiles = HashMap<String, Roads>()
+        var checked = 0
+        // Points along the coast road and inland, both directions.
+        for (i in 0 until 400) {
+            val lat = 31.5 + i * 0.0047; val lon = 34.6 + (i % 37) * 0.017
+            for (h in listOf(0.0, 90.0)) {
+                val t = RoadTiles.name(lat, lon)
+                val r = tiles.getOrPut(t) { Roads.parse(runCatching { data("roads/$t.txt") }.getOrDefault("")) }
+                val a = whole.at(lat, lon, h); val b = r.at(lat, lon, h)
+                assertEquals("$lat,$lon", a?.limit, b?.limit)
+                if (a != null) checked++
+            }
+        }
+        assertTrue(checked > 0)
     }
 
     @Test fun sectionsPassValidation() {

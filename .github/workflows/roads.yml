@@ -1,5 +1,6 @@
 # Refreshes data/roads.txt (road speed limits, for the no-camera speeding alert) from OpenStreetMap
-# once a week and commits only a real change. The app downloads roads.txt only when roads.version changes.
+# once a week and commits only a real change, split into tiles (data/roads/, tools/tile_roads.py).
+# The app downloads the tile index and then only the changed tiles near the car.
 name: roads
 
 on:
@@ -9,6 +10,7 @@ on:
     branches: [main]
     paths:
       - "tools/fetch_roads.py"
+      - "tools/tile_roads.py"
       - ".github/workflows/roads.yml"
   workflow_dispatch:
 
@@ -63,9 +65,11 @@ jobs:
         if: steps.cmp.outputs.changed == 'true'
         run: |
           cp "$RUNNER_TEMP/roads/roads.txt" "$RUNNER_TEMP/roads/roads.version" data/
+          python tools/tile_roads.py
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/roads.txt data/roads.version
+          git add -A data/roads
           git commit -m "Road speed limits update $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3; do
             git push origin HEAD:main && exit 0

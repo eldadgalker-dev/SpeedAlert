@@ -34,6 +34,7 @@ class MainActivity : Activity() {
     private lateinit var toggle: Button
     private lateinit var updateView: TextView
     private val info = mutableMapOf<String, TextView>()
+    private val notes = mutableMapOf<String, TextView>()
     private var afterGrant: (() -> Unit)? = null
     @Volatile private var updateText = ""
     private val ui = Handler(Looper.getMainLooper())
@@ -81,7 +82,8 @@ class MainActivity : Activity() {
         statusView = text(15f, pal.muted).apply { gravity = Gravity.CENTER; minLines = 3 }
         body.addView(card().apply {
             gravity = Gravity.CENTER_HORIZONTAL
-            addView(stateChip)
+            addView(stateChip.apply { gravity = Gravity.CENTER },
+                LinearLayout.LayoutParams(-2, -2).apply { gravity = Gravity.CENTER_HORIZONTAL })
             addView(speedView)
             addView(text(14f, pal.muted, "קמ\"ש").apply { gravity = Gravity.CENTER })
             addView(statusView.apply { setPadding(0, px(8), 0, 0) })
@@ -169,20 +171,23 @@ class MainActivity : Activity() {
 
         val level = Usage.batteryLevel(this)
         val charging = Usage.charging(this)
-        info.getValue(K_BATTERY).text = "$level%" + if (charging) " (בטעינה)" else ""
+        show(K_BATTERY, "$level%", if (charging) "בטעינה" else "")
         val recent = Usage.recent(this, AlertService.gpsMs(), AlertService.savingMs(), AlertService.motionSensor)
-        info.getValue(K_DRAIN).text = when {
-            recent == null -> "נמדד…"
-            else -> "%.2f%% לשעה, הערכה, ב-%d הדקות האחרונות".format(recent.drainPerHour, recent.minutes) +
-                if (running && AlertService.saving) " (חיסכון: לא בנסיעה)" else ""
+        val saving = if (running && AlertService.saving) "\nחיסכון: לא בנסיעה" else ""
+        if (recent == null) {
+            show(K_DRAIN, "נמדד…", saving.trim())
+            show(K_CPU, "נמדד…")
+        } else {
+            show(K_DRAIN, "%.2f%% לשעה".format(recent.drainPerHour), "הערכה, ב-${recent.minutes} הדקות האחרונות$saving")
+            show(K_CPU, "%.2f%%".format(recent.cpuPercent), "מהמעבד כולו, ב-${recent.minutes} הדקות האחרונות")
         }
         // Memory info is a slow system call: every 10th refresh only.
-        if (renders++ % 10 == 0) info.getValue(K_MEMORY).text = "${Usage.memoryMb(this)} MB"
-        info.getValue(K_CPU).text = if (recent == null) "נמדד…" else "%.2f%% מהמעבד, ב-%d הדקות האחרונות".format(recent.cpuPercent, recent.minutes)
-        info.getValue(K_UPTIME).text = if (running) minutes(System.currentTimeMillis() - AlertService.startedAt) else "–"
-        info.getValue(K_DATA).text = AlertService.dataInfo.ifEmpty { "בודק…" }
-        info.getValue(K_VERSION).text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
-        for (v in info.values) fit(v.parent as LinearLayout)
+        if (renders++ % 10 == 0) show(K_MEMORY, "${Usage.memoryMb(this)} MB")
+        show(K_UPTIME, if (running) minutes(System.currentTimeMillis() - AlertService.startedAt) else "–")
+        show(K_DATA, AlertService.dataInfo.ifEmpty { "בודק…" }, AlertService.dataNote)
+        val newer = AppUpdate.available
+        show(K_VERSION, "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+            if (newer == null) "" else "גרסה ${newer.versionName} זמינה: לחץ \"בדיקת עדכון\"")
     }
 
     private fun minutes(ms: Long): String {
@@ -217,44 +222,44 @@ class MainActivity : Activity() {
         setOnClickListener { onClick() }
     }
 
+    /**
+     * One table row (user request 2026-10-29): the label at the start and a short value at the
+     * end of one line, with notes under them across the whole width.
+     */
     private fun row(key: String) = LinearLayout(this).apply {
-        orientation = LinearLayout.HORIZONTAL
+        orientation = LinearLayout.VERTICAL
         setPadding(0, px(6), 0, px(6))
-        addView(text(15f, pal.muted, key).apply { maxLines = 1 },
-            LinearLayout.LayoutParams(-2, -2).apply { marginEnd = px(12) })
-        addView(text(15f, pal.text).apply {
-            setTypeface(typeface, Typeface.BOLD); gravity = Gravity.END; info[key] = this
-        }, LinearLayout.LayoutParams(0, -2, 1f))
+        addView(LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            addView(text(15f, pal.muted, key).apply { maxLines = 1 }, LinearLayout.LayoutParams(0, -2, 1f))
+            addView(text(15f, pal.text).apply {
+                setTypeface(typeface, Typeface.BOLD); maxLines = 1; info[key] = this
+            }, LinearLayout.LayoutParams(-2, -2).apply { marginStart = px(12) })
+        })
+        addView(text(13f, pal.muted).apply { visibility = View.GONE; notes[key] = this })
     }
 
-    /**
-     * A value that does not fit beside its label goes to its own full-width line under it,
-     * instead of wrapping in a narrow column (field reports 2026-10-28 and 2026-10-29). One way
-     * only: a row that moved stays under its label, so a value whose length changes every
-     * second does not make the screen jump.
-     */
-    private fun fit(row: LinearLayout) {
-        if (row.width == 0 || row.orientation == LinearLayout.VERTICAL) return
-        val label = row.getChildAt(0) as TextView
-        val value = row.getChildAt(1) as TextView
-        val avail = row.width - row.paddingStart - row.paddingEnd - label.width - px(12)
-        if (value.paint.measureText(value.text.toString()) <= avail) return
-        row.orientation = LinearLayout.VERTICAL
-        value.gravity = Gravity.START
-        value.layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(2) }
+    private fun show(key: String, value: String, note: String = "") {
+        info.getValue(key).text = value
+        notes.getValue(key).apply { text = note; visibility = if (note.isEmpty()) View.GONE else View.VISIBLE }
     }
 
     // ---- actions ----
 
-    /** Launch-time data check; while the service runs it repeats every 30 minutes. */
+    /**
+     * Launch-time checks: the app version every time (user request 2026-10-29), the data when the
+     * service is not running (it checks both every 30 minutes itself).
+     */
     private fun checkDataAtLaunch() {
-        if (AlertService.running) return
         Thread {
-            AlertService.dataInfo = runCatching {
+            runCatching { AppUpdate.check() }
+            if (AlertService.running) return@Thread
+            AlertService.dataInfo = "${Database.cameras(this).size} מצלמות"
+            AlertService.dataNote = runCatching {
                 val changed = DataUpdate.run(this).any
-                val n = Database.cameras(this).size
-                (if (changed) "עודכן: " else "") + "$n מצלמות (${Database.fetched(this)})"
-            }.getOrElse { "${Database.cameras(this).size} מצלמות (${Database.fetched(this)}), הבדיקה נכשלה" }
+                AlertService.dataInfo = "${Database.cameras(this).size} מצלמות"
+                (if (changed) "עודכן, " else "") + "נתונים מ-${Database.fetched(this)}"
+            }.getOrElse { "נתונים מ-${Database.fetched(this)}, הבדיקה נכשלה" }
         }.start()
     }
 

@@ -64,7 +64,6 @@ object Database {
     const val PENALTIES = "penalties.json"
     const val BUS_LANES = "buslanes.json"
     const val SECTIONS = "sections.json"
-    const val ROADS = "roads.txt"
 
     fun cameras(ctx: Context): List<Camera> = parseCameras(read(ctx, CAMERAS))
 
@@ -72,7 +71,6 @@ object Database {
 
     fun busLanes(ctx: Context): List<BusLane> = parseBusLanes(read(ctx, BUS_LANES))
 
-    fun roads(ctx: Context): Roads = Roads.parse(read(ctx, ROADS))
 
     fun sections(ctx: Context): List<AverageSection> = parseSections(read(ctx, SECTIONS))
 

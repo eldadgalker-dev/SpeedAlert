@@ -6,14 +6,19 @@ import kotlin.math.floor
 import kotlin.math.hypot
 import kotlin.math.roundToInt
 
-/** Speed limit of the road under the car, from data/roads.txt (OSM, built by tools/fetch_roads.py). */
+/** Answers the speed limit of the road under the car. */
+fun interface RoadLookup {
+    fun at(lat: Double, lon: Double, heading: Double): Roads.Match?
+}
+
+/** Speed limit of the road under the car, from one tile of data/roads/ (OSM, built by tools/fetch_roads.py and tile_roads.py). */
 class Roads private constructor(
     private val lat1: IntArray, private val lon1: IntArray,   // segment ends, degrees * 1e5
     private val lat2: IntArray, private val lon2: IntArray,
     private val way: IntArray,                                // segment -> way
     private val limits: IntArray, private val urban: BooleanArray,
     private val grid: Map<Long, IntArray>,                    // cell -> segments
-) {
+) : RoadLookup {
     class Match(val limit: Int, val urban: Boolean, val distance: Double)
 
     val segments get() = lat1.size
@@ -25,7 +30,7 @@ class Roads private constructor(
      * "50" in the middle of the Ayalon). Null when none, or when one of them has an unknown
      * limit (0): then the limit cannot be told.
      */
-    fun at(lat: Double, lon: Double, heading: Double): Match? {
+    override fun at(lat: Double, lon: Double, heading: Double): Match? {
         val k = cos(Math.toRadians(lat)) * 1.1132  // metres per 1e-5 degree of longitude
         val px = lon * 1e5; val py = lat * 1e5
         var best = -1; var bestD = MATCH_M
@@ -131,7 +136,7 @@ private class IntList {
  * (user request 2026-10-28). Starts after [CONFIRM] fixes in a row, then repeats while it lasts.
  */
 class SpeedingWatcher(@Volatile var penalties: Penalties) {
-    @Volatile var roads: Roads? = null
+    @Volatile var roads: RoadLookup? = null
     private var streak = 0
     private var owed = false   // an alert was given; say once when back at or under the limit
 

@@ -41,9 +41,9 @@ object DataUpdate {
     const val INTERVAL_MS = 30 * 60_000L
 
     /**
-     * Downloads the tables, keeps them only when they parse; says what changed, so the service
-     * re-parses roads.txt (heavy) only when it changed.
-     * roads.txt (~12 MB) is downloaded only when roads.version (its sha256) changed.
+     * Downloads the tables, keeps them only when they parse; says what changed. For the roads
+     * only the tile index (~40 KB) is downloaded; [RoadTiles] fetches a changed tile when the
+     * car comes near it (user request 2026-10-29: download only what is needed).
      */
     fun run(ctx: Context): Changed {
         var changed = false
@@ -55,15 +55,11 @@ object DataUpdate {
             save(ctx, name, text)
             changed = true
         }
-        val version = Http.text("${BuildConfig.DATA_URL}/$ROADS_VERSION").trim().lowercase()
-        if (version != runCatching { Database.read(ctx, ROADS_VERSION).trim() }.getOrNull()) {
-            val roads = Http.text("${BuildConfig.DATA_URL}/${Database.ROADS}")
-            val sha = MessageDigest.getInstance("SHA-256").digest(roads.toByteArray(Charsets.UTF_8))
-                .joinToString("") { "%02x".format(it) }
-            if (sha != version) throw IOException("roads.txt does not match roads.version")
-            validate(Database.ROADS, roads)
-            save(ctx, Database.ROADS, roads)
-            save(ctx, ROADS_VERSION, version)
+        val index = Http.text("${BuildConfig.DATA_URL}/${RoadTiles.INDEX}")
+        validate(RoadTiles.INDEX, index)
+        if (index != Database.read(ctx, RoadTiles.INDEX)) {
+            File(ctx.filesDir, RoadTiles.DIR).mkdirs()
+            save(ctx, RoadTiles.INDEX, index)
             roadsChanged = true
         }
         return Changed(changed, roadsChanged)
@@ -75,6 +71,7 @@ object DataUpdate {
 
     private fun save(ctx: Context, name: String, text: String) {
         val tmp = File(ctx.filesDir, "$name.${Thread.currentThread().id}.tmp")
+        tmp.parentFile?.mkdirs()
         tmp.writeText(text, Charsets.UTF_8)
         if (!tmp.renameTo(File(ctx.filesDir, name))) throw IOException("cannot save $name")
     }
@@ -88,13 +85,12 @@ object DataUpdate {
             }
             Database.BUS_LANES -> require(Database.parseBusLanes(text).isNotEmpty()) { "no bus lanes" }
             Database.SECTIONS -> Database.parseSections(text)
-            Database.ROADS -> require(Roads.parse(text).segments >= MIN_ROAD_SEGMENTS) { "too few roads" }
+            RoadTiles.INDEX -> require(RoadTiles.parseIndex(text).size >= MIN_ROAD_TILES) { "too few road tiles" }
         }
     }
 
     private const val MIN_CAMERAS = 50
-    private const val MIN_ROAD_SEGMENTS = 100_000
-    private const val ROADS_VERSION = "roads.version"
+    private const val MIN_ROAD_TILES = 300
 }
 
 /** Release contract (release.yml): latest Release has SpeedAlert.apk and version.json {versionCode, versionName, sha256}. */
@@ -103,11 +99,14 @@ data class RemoteVersion(val versionCode: Int, val versionName: String, val sha2
 object AppUpdate {
     const val APK = "SpeedAlert.apk"
 
+    /** Newer version found by the last check (at every launch and every data check; user request 2026-10-29). */
+    @Volatile var available: RemoteVersion? = null
+
     /** The remote version when newer than the installed one, else null. */
     fun check(): RemoteVersion? {
         val o = JSONObject(Http.text("${BuildConfig.RELEASE_URL}/version.json"))
         val r = RemoteVersion(o.getInt("versionCode"), o.getString("versionName"), o.getString("sha256").lowercase())
-        return if (r.versionCode > BuildConfig.VERSION_CODE) r else null
+        return (if (r.versionCode > BuildConfig.VERSION_CODE) r else null).also { available = it }
     }
 
     /** Downloads the APK to cache/updates and verifies its SHA-256 before it may be installed. */

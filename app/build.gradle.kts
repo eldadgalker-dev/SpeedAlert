@@ -49,7 +49,7 @@ android {
     sourceSets["main"].assets.srcDirs("../data")
     // Google Drive drops desktop.ini into every folder: skip it in assets,
     // and compile resources from a copy without it.
-    androidResources { ignoreAssetsPattern = "!desktop.ini:!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~" }
+    androidResources { ignoreAssetsPattern = "!desktop.ini:!roads.txt:!roads.version:!.svn:!.git:!.ds_store:!*.scc:.*:<dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~" }
     sourceSets["main"].res.setSrcDirs(listOf(cleanRes.map { it.destinationDir }))
 
     buildTypes {
