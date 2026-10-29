@@ -53,6 +53,7 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 | `cameras.json` | Speed and red-light cameras: position, kind, speed limit, direction, urban flag | OpenStreetMap (ODbL) via Overpass; `tools/fetch_cameras.py` |
 | `roads.txt`, `roads.version` | Speed limit per road segment (OSM `maxspeed`; untagged residential = 50; untagged main roads = 0, unknown, which blocks the match; the highest limit among parallel roads within 20 m wins), sha256 | OpenStreetMap via Overpass; `tools/fetch_roads.py`, weekly `.github/workflows/roads.yml` |
 | `buslanes.json` | Bus-lane enforcement sections (both ends) | Ministry of Transport, gov.il/he/pages/citizen_cameras |
+| `sections.json` | Average-speed sections, one entry per direction: name, limit, from, to, optional length_m | None published yet (empty list, filled by hand when a source appears) |
 | `penalties.json` | Fine and points by km/h over the limit, urban / interurban | צו התעבורה (עבירות קנס) items 75-78א and the points table of תקנות התעבורה; verified 2026-10-28 (sources in the file) |
 
 Speed limit per camera: the camera's own `maxspeed` tag, else the nearest road
@@ -87,8 +88,9 @@ APK: `~/.speedalert-build/app/outputs/apk/debug/app-debug.apk`.
 
 - OSM coverage of Israeli cameras is partial (182 cameras on 2026-10-28; 46 without a known limit).
   The official GovMap layer is not downloadable as a file and is not included.
-- Point-to-point (average speed) sections are not handled: OSM has none in Israel and no public
-  list of their positions exists (2026-10-29).
+- Point-to-point (average speed) sections: `AverageSpeedWatcher` announces the start and the end and
+  alerts only while the section average is above the limit, with the speed that brings it back.
+  `data/sections.json` is empty: OSM has none in Israel and no public list exists (2026-10-29).
 
 ## Copyright and licence
 

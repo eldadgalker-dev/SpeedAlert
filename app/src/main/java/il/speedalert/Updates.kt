@@ -48,7 +48,7 @@ object DataUpdate {
     fun run(ctx: Context): Changed {
         var changed = false
         var roadsChanged = false
-        for (name in listOf(Database.CAMERAS, Database.PENALTIES, Database.BUS_LANES)) {
+        for (name in listOf(Database.CAMERAS, Database.PENALTIES, Database.BUS_LANES, Database.SECTIONS)) {
             val text = Http.text("${BuildConfig.DATA_URL}/$name")
             validate(name, text)
             if (text == Database.read(ctx, name)) continue
@@ -87,6 +87,7 @@ object DataUpdate {
                 require(p.forExcess(25, true) != null && p.forExcess(25, false) != null) { "penalty table incomplete" }
             }
             Database.BUS_LANES -> require(Database.parseBusLanes(text).isNotEmpty()) { "no bus lanes" }
+            Database.SECTIONS -> Database.parseSections(text)
             Database.ROADS -> require(Roads.parse(text).segments >= MIN_ROAD_SEGMENTS) { "too few roads" }
         }
     }

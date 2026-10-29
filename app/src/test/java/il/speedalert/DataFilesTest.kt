@@ -37,6 +37,10 @@ class DataFilesTest {
         assertTrue(m != null && m.limit >= 80)
     }
 
+    @Test fun sectionsPassValidation() {
+        DataUpdate.validate(Database.SECTIONS, data(Database.SECTIONS))
+    }
+
     @Test(expected = Exception::class) fun truncatedDownloadIsRejected() {
         val text = data(Database.CAMERAS)
         DataUpdate.validate(Database.CAMERAS, text.substring(0, text.length / 2))

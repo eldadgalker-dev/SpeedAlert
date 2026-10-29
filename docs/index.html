@@ -28,9 +28,9 @@
   .qr { margin: 8px 0 0; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
   .qr img { background: #fff; padding: 8px; border-radius: 10px; border: 1px solid var(--line); }
   .qr figcaption { color: var(--muted); flex: 1 1 220px; }
-  footer { margin-top: 3rem; color: var(--muted); font-size: .9rem; }
+  footer { margin-top: 3rem; color: var(--muted); font-size: .9rem; text-align: center; }
   footer p { margin: .15rem 0; }
-  footer p[dir="ltr"] { text-align: left; }
+  html, body { overscroll-behavior-y: none; }
 </style>
 </head>
 <body>
@@ -95,7 +95,7 @@
   <div class="note">
     <ul>
       <li>מיקומי מצלמות המהירות והרמזור לקוחים מ-<span lang="en" dir="ltr">OpenStreetMap</span> והכיסוי חלקי. מצלמה שלא במאגר לא תתריע.</li>
-      <li>מצלמות ממוצע מהירות (קטע) אינן מטופלות בנפרד.</li>
+      <li>קטעי אכיפת מהירות ממוצעת: האפליקציה מוכנה להם (הודעה בתחילת הקטע ובסופו, והתראה רק כשהמהירות הממוצעת בקטע עוברת את המותר, עם המהירות שמחזירה את הממוצע למותר), אבל עדיין אין רשימה פומבית של מיקומי הקטעים, ולכן המאגר ריק. כשתפורסם רשימה, היא תתווסף למאגר ותגיע לאפליקציה בלי גרסה חדשה.</li>
       <li>מצלמות ניידות אינן נתמכות: אין מקור ציבורי למיקומן.</li>
       <li>מצלמות חנייה אינן נתמכות עדיין: עיריית תל אביב מפרסמת כתובות רחוב בלבד, בלי מיקום מדויק.</li>
       <li>אכיפת נת"צ: קטעי משרד התחבורה בלבד. האכיפה פועלת בימים א-ה 06:00-24:00, ביום שישי וערבי חג 06:00-15:00, במוצאי שבת וחג 20:45-24:00; ההודעה נשמעת בכל שעה.</li>

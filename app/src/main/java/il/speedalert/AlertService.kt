@@ -47,6 +47,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private lateinit var watcher: CameraWatcher
     private lateinit var speeding: SpeedingWatcher
     private lateinit var busLanes: BusLaneWatcher
+    private lateinit var average: AverageSpeedWatcher
     private val once = ArrayDeque<String>()          // one-time alerts waiting for the voice
     private var beepsUntil = 0L                      // the voice waits for the beeps to end
     private lateinit var tts: TextToSpeech
@@ -79,6 +80,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         watcher = CameraWatcher(cameras, Database.penalties(this))
         speeding = SpeedingWatcher(Database.penalties(this))
         busLanes = BusLaneWatcher(runCatching { Database.busLanes(this) }.getOrDefault(emptyList()))
+        average = AverageSpeedWatcher(runCatching { Database.sections(this) }.getOrDefault(emptyList()))
         Thread { runCatching { speeding.roads = Database.roads(this) } }.start()
         tts = TextToSpeech(this, this)
         startInForeground()
@@ -131,6 +133,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
                     watcher.replaceTables(cams, Database.penalties(this@AlertService))
                     speeding.penalties = Database.penalties(this@AlertService)
                     runCatching { busLanes.lanes = Database.busLanes(this@AlertService) }
+                    runCatching { average.sections = Database.sections(this@AlertService) }
                     if (changed.roads) runCatching { speeding.roads = Database.roads(this@AlertService) }
                     dataInfo = "עודכן: ${cams.size} מצלמות (${Database.fetched(this@AlertService)})"
                 }
@@ -193,6 +196,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         // Speeding without a camera is checked only when no camera alert is due.
         val camera = watcher.onLocation(lat, lon, speedKmh, heading)
         val alerts = listOfNotNull(camera, busLanes.onLocation(lat, lon, speedKmh, heading),
+            average.onLocation(lat, lon, speedKmh, heading, loc.time),
             if (camera?.repeat == true) null else speeding.onLocation(lat, lon, speedKmh, heading))
         alerts.filter { !it.repeat }.forEach { once.addLast(it.text) }
         // GPS once a second only near a camera or while an alert lasts; every [SLOW_MS] elsewhere.

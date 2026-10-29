@@ -76,7 +76,9 @@ class MainActivity : Activity() {
         speedView = TextView(this).apply {
             textSize = 64f; setTypeface(typeface, Typeface.BOLD); setTextColor(pal.text); gravity = Gravity.CENTER
         }
-        statusView = text(15f, pal.muted).apply { gravity = Gravity.CENTER }
+        // Fixed minimum heights: a status or alert of another length must not move the screen
+        // up and down every second (field report 2026-10-29).
+        statusView = text(15f, pal.muted).apply { gravity = Gravity.CENTER; minLines = 3 }
         body.addView(card().apply {
             gravity = Gravity.CENTER_HORIZONTAL
             addView(stateChip)
@@ -86,7 +88,7 @@ class MainActivity : Activity() {
         })
 
         // Last alert
-        alertView = text(17f, pal.text).apply { setTypeface(typeface, Typeface.BOLD) }
+        alertView = text(17f, pal.text).apply { setTypeface(typeface, Typeface.BOLD); minLines = 4 }
         alertCard = card(accent = RED).apply {
             addView(text(13f, RED, "התראה אחרונה").apply { setTypeface(typeface, Typeface.BOLD) })
             addView(alertView)
@@ -119,22 +121,21 @@ class MainActivity : Activity() {
             })
             for (key in listOf(K_BATTERY, K_DRAIN, K_MEMORY, K_CPU, K_UPTIME, K_DATA, K_VERSION)) addView(row(key))
         })
-        // Copyright and data credits, one item per line, each aligned by its language (user request
-        // 2026-10-29): English lines forced LTR and left, Hebrew lines right.
+        // Copyright and data credits, one item per line, centred (user requests 2026-10-29);
+        // each line keeps the direction of its language so bidi cannot reorder it.
         body.addView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(px(4), px(12), px(4), px(8))
             for (line in COPYRIGHT_LINES) addView(text(12f, pal.muted, line).apply {
-                if (line.first() in 'א'..'ת') {
-                    textDirection = View.TEXT_DIRECTION_RTL; textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                } else {
-                    textDirection = View.TEXT_DIRECTION_LTR; layoutDirection = View.LAYOUT_DIRECTION_LTR
-                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
-                }
+                textDirection = if (line.first() in 'א'..'ת') View.TEXT_DIRECTION_RTL else View.TEXT_DIRECTION_LTR
+                gravity = Gravity.CENTER_HORIZONTAL; textAlignment = View.TEXT_ALIGNMENT_CENTER
             }, LinearLayout.LayoutParams(-1, -2))
         })
 
-        root.addView(ScrollView(this).apply { addView(body) }, LinearLayout.LayoutParams(-1, 0, 1f))
+        root.addView(ScrollView(this).apply {
+            overScrollMode = View.OVER_SCROLL_NEVER   // no stretch/bounce at the ends
+            addView(body)
+        }, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(root)
         checkDataAtLaunch()
     }
@@ -228,19 +229,19 @@ class MainActivity : Activity() {
 
     /**
      * A value that does not fit beside its label goes to its own full-width line under it,
-     * instead of wrapping in a narrow column (field reports 2026-10-28 and 2026-10-29).
+     * instead of wrapping in a narrow column (field reports 2026-10-28 and 2026-10-29). One way
+     * only: a row that moved stays under its label, so a value whose length changes every
+     * second does not make the screen jump.
      */
     private fun fit(row: LinearLayout) {
-        if (row.width == 0) return
+        if (row.width == 0 || row.orientation == LinearLayout.VERTICAL) return
         val label = row.getChildAt(0) as TextView
         val value = row.getChildAt(1) as TextView
         val avail = row.width - row.paddingStart - row.paddingEnd - label.width - px(12)
-        val below = value.paint.measureText(value.text.toString()) > avail
-        if (below == (row.orientation == LinearLayout.VERTICAL)) return
-        row.orientation = if (below) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
-        value.gravity = if (below) Gravity.START else Gravity.END
-        value.layoutParams = if (below) LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(2) }
-            else LinearLayout.LayoutParams(0, -2, 1f)
+        if (value.paint.measureText(value.text.toString()) <= avail) return
+        row.orientation = LinearLayout.VERTICAL
+        value.gravity = Gravity.START
+        value.layoutParams = LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(2) }
     }
 
     // ---- actions ----

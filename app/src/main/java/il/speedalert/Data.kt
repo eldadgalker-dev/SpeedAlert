@@ -63,6 +63,7 @@ object Database {
     const val CAMERAS = "cameras.json"
     const val PENALTIES = "penalties.json"
     const val BUS_LANES = "buslanes.json"
+    const val SECTIONS = "sections.json"
     const val ROADS = "roads.txt"
 
     fun cameras(ctx: Context): List<Camera> = parseCameras(read(ctx, CAMERAS))
@@ -72,6 +73,19 @@ object Database {
     fun busLanes(ctx: Context): List<BusLane> = parseBusLanes(read(ctx, BUS_LANES))
 
     fun roads(ctx: Context): Roads = Roads.parse(read(ctx, ROADS))
+
+    fun sections(ctx: Context): List<AverageSection> = parseSections(read(ctx, SECTIONS))
+
+    /** Average-speed sections; an empty list is valid (none published yet). */
+    fun parseSections(json: String): List<AverageSection> {
+        val a = JSONObject(json).getJSONArray("sections")
+        return (0 until a.length()).map { i ->
+            val o = a.getJSONObject(i)
+            val from = o.getJSONArray("from"); val to = o.getJSONArray("to")
+            AverageSection(o.optString("name"), o.getInt("limit"), from.getDouble(0), from.getDouble(1),
+                to.getDouble(0), to.getDouble(1), if (o.has("length_m")) o.getDouble("length_m") else null)
+        }.onEach { require(it.limit in 30..130) { "bad limit ${it.limit}" } }
+    }
 
     fun parseBusLanes(json: String): List<BusLane> {
         val a = JSONObject(json).getJSONArray("sections")
