@@ -119,12 +119,19 @@ class MainActivity : Activity() {
             })
             for (key in listOf(K_BATTERY, K_DRAIN, K_MEMORY, K_CPU, K_UPTIME, K_DATA, K_VERSION)) addView(row(key))
         })
-        // Copyright and data credits; Latin-only line forced LTR so bidi cannot reorder it.
-        body.addView(text(12f, pal.muted, COPYRIGHT).apply {
-            textDirection = View.TEXT_DIRECTION_LTR; gravity = Gravity.CENTER; setPadding(0, px(12), 0, 0)
-        })
-        body.addView(text(12f, pal.muted, "רישיון ⁦BSD-3-Clause⁩. נתוני מפה: ⁦© OpenStreetMap contributors, ODbL⁩.").apply {
-            gravity = Gravity.CENTER; setPadding(0, px(2), 0, px(8))
+        // Copyright and data credits, one item per line, each aligned by its language (user request
+        // 2026-10-29): English lines forced LTR and left, Hebrew lines right.
+        body.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(px(4), px(12), px(4), px(8))
+            for (line in COPYRIGHT_LINES) addView(text(12f, pal.muted, line).apply {
+                if (line.first() in 'א'..'ת') {
+                    textDirection = View.TEXT_DIRECTION_RTL; textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+                } else {
+                    textDirection = View.TEXT_DIRECTION_LTR; layoutDirection = View.LAYOUT_DIRECTION_LTR
+                    textAlignment = View.TEXT_ALIGNMENT_VIEW_START
+                }
+            }, LinearLayout.LayoutParams(-1, -2))
         })
 
         root.addView(ScrollView(this).apply { addView(body) }, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -174,6 +181,7 @@ class MainActivity : Activity() {
         info.getValue(K_UPTIME).text = if (running) minutes(System.currentTimeMillis() - AlertService.startedAt) else "–"
         info.getValue(K_DATA).text = AlertService.dataInfo.ifEmpty { "בודק…" }
         info.getValue(K_VERSION).text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+        for (v in info.values) fit(v.parent as LinearLayout)
     }
 
     private fun minutes(ms: Long): String {
@@ -211,12 +219,28 @@ class MainActivity : Activity() {
     private fun row(key: String) = LinearLayout(this).apply {
         orientation = LinearLayout.HORIZONTAL
         setPadding(0, px(6), 0, px(6))
-        // The label keeps its width; a long value wraps inside its own column (field report 2026-10-28).
         addView(text(15f, pal.muted, key).apply { maxLines = 1 },
             LinearLayout.LayoutParams(-2, -2).apply { marginEnd = px(12) })
         addView(text(15f, pal.text).apply {
             setTypeface(typeface, Typeface.BOLD); gravity = Gravity.END; info[key] = this
         }, LinearLayout.LayoutParams(0, -2, 1f))
+    }
+
+    /**
+     * A value that does not fit beside its label goes to its own full-width line under it,
+     * instead of wrapping in a narrow column (field reports 2026-10-28 and 2026-10-29).
+     */
+    private fun fit(row: LinearLayout) {
+        if (row.width == 0) return
+        val label = row.getChildAt(0) as TextView
+        val value = row.getChildAt(1) as TextView
+        val avail = row.width - row.paddingStart - row.paddingEnd - label.width - px(12)
+        val below = value.paint.measureText(value.text.toString()) > avail
+        if (below == (row.orientation == LinearLayout.VERTICAL)) return
+        row.orientation = if (below) LinearLayout.VERTICAL else LinearLayout.HORIZONTAL
+        value.gravity = if (below) Gravity.START else Gravity.END
+        value.layoutParams = if (below) LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(2) }
+            else LinearLayout.LayoutParams(0, -2, 1f)
     }
 
     // ---- actions ----
@@ -275,6 +299,8 @@ class MainActivity : Activity() {
         val needed = buildList {
             add(Manifest.permission.ACCESS_FINE_LOCATION)
             if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
+            // Optional: driving start and end from the phone's activity recognition (saves power).
+            if (Build.VERSION.SDK_INT >= 29) add(Manifest.permission.ACTIVITY_RECOGNITION)
         }.filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
         if (needed.isEmpty()) {
             action()
@@ -306,6 +332,12 @@ class MainActivity : Activity() {
         private const val K_UPTIME = "זמן פעילות"
         private const val K_DATA = "מאגר מצלמות"
         private const val K_VERSION = "גרסת תוכנה"
-        private const val COPYRIGHT = "Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/"
+        private val COPYRIGHT_LINES = listOf(
+            "Copyright (c) 1986-2026 Eldad Galker",
+            "eldad@galker.com",
+            "https://www.galker.com/software/",
+            "רישיון: ⁦BSD-3-Clause⁩",
+            "נתוני מפה: ⁦© OpenStreetMap contributors, ODbL⁩",
+        )
     }
 }

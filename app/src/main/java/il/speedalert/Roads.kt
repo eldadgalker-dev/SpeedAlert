@@ -133,13 +133,19 @@ private class IntList {
 class SpeedingWatcher(@Volatile var penalties: Penalties) {
     @Volatile var roads: Roads? = null
     private var streak = 0
+    private var owed = false   // an alert was given; say once when back at or under the limit
 
     fun onLocation(lat: Double, lon: Double, speedKmh: Double, heading: Double?): Alert? {
         val r = roads
         val m = if (r == null || heading == null) null else r.at(lat, lon, heading)
         val over = if (m == null) 0 else kotlin.math.ceil(speedKmh - m.limit).toInt()
-        if (m == null || over < OVER_KMH) { streak = 0; return null }
+        if (m == null || over < OVER_KMH) {
+            streak = 0
+            if (owed && m != null && over <= 0) { owed = false; return Alert("${CameraWatcher.OK} מותרת ${m.limit}.", repeat = false) }
+            return null
+        }
         if (++streak < CONFIRM) return null
+        owed = true
         return Alert("חריגת מהירות. מהירות נוכחית ${speedKmh.roundToInt()}. מותרת ${m.limit}. ${penalties.spoken(over, m.urban)}",
             repeat = true)
     }

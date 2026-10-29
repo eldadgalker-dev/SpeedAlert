@@ -9,6 +9,8 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
   15 km/h with no alert, location stops and the significant-motion sensor (hardware trigger) wakes
   full GPS when the phone moves; a wake without driving goes back to saving after 90 s. Without that
   sensor: a balanced (network) fix every 15 s, back to full GPS after about 80 m.
+- Activity Recognition (Play services, IN_VEHICLE transitions): entering a vehicle wakes full GPS at
+  once; leaving it while stopped goes to saving without the 3-minute wait.
 - Main screen: battery (estimate from the app's CPU and GPS time) and CPU of this app only, over the
   last minutes (up to 10); dates as dd/mm/yyyy.
 - Every announcement opens with three loud, harsh beeps on the alarm stream (every sentence, repeats of a continuous alert included).
@@ -16,7 +18,10 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 - Speed camera: from 500 m before it the alert repeats without a break, with the current
   distance and speed, until the camera is passed (also while stopped near it):
   "מצלמת מהירות בעוד 480 מטר. מהירות נוכחית 120. מותרת 90. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות."
-- Red-light camera: once, 300 m before it: "מצלמת רמזור בעוד 280 מטר."
+- Red-light camera: from 300 m before it, repeated until it is passed or the car stops (below 5 km/h):
+  "מצלמת רמזור בעוד 280 מטר."
+- Within the limit every message ends with "מהירות תקינה."; after speeding without a camera,
+  "מהירות תקינה. מותרת 50." is said once on getting back within the limit.
 - Bus-lane enforcement (Ministry of Transport sections on roads 4, 5, 443, 461, 471): once when
   entering a section: "אכיפת נתיב תחבורה ציבורית בכביש 443. אסור לנסוע בנתיב התחבורה הציבורית."
 - Speeding without a camera: 30 km/h or more above the limit of the road under the car
@@ -82,7 +87,8 @@ APK: `~/.speedalert-build/app/outputs/apk/debug/app-debug.apk`.
 
 - OSM coverage of Israeli cameras is partial (182 cameras on 2026-10-28; 46 without a known limit).
   The official GovMap layer is not downloadable as a file and is not included.
-- Point-to-point (average speed) sections and red-light cameras are not handled separately.
+- Point-to-point (average speed) sections are not handled: OSM has none in Israel and no public
+  list of their positions exists (2026-10-29).
 
 ## Copyright and licence
 

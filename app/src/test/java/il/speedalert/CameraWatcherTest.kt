@@ -42,7 +42,7 @@ class CameraWatcherTest {
 
     @Test fun legalSpeedAnnouncesSpeedAndLimit() {
         val alerts = drive(watcher(cam), 31.9990, 32.0010, 85.0)
-        assertEquals("מצלמת מהירות בעוד 480 מטר. מהירות נוכחית 85. מותרת 90.", alerts[0].text)
+        assertEquals("מצלמת מהירות בעוד 480 מטר. מהירות נוכחית 85. מותרת 90. מהירות תקינה.", alerts[0].text)
     }
 
     @Test fun keepsAlertingWhenStoppedNearTheCamera() {
@@ -86,12 +86,22 @@ class CameraWatcherTest {
         assertTrue(drive(w, 32.0000, 32.0045, 100.0).isNotEmpty())
     }
 
-    @Test fun redLightCameraIsAnnouncedOnce() {
-        val red = cam.copy(kind = Camera.Kind.RED_LIGHT, limit = null)
-        val alerts = drive(watcher(red), 32.0000, 32.0120, 60.0)
-        assertEquals(1, alerts.size)
-        assertFalse(alerts[0].repeat)
+    @Test fun redLightCameraRepeatsUntilPassed() {
+        val red = cam.copy(kind = Camera.Kind.RED_LIGHT, limit = 50)
+        val w = watcher(red)
+        val alerts = drive(w, 32.0000, 32.0049, 60.0)
+        assertTrue(alerts.size > 20 && alerts.all { it.repeat })
         assertEquals("מצלמת רמזור בעוד 280 מטר.", alerts[0].text)
+        assertTrue(drive(w, 32.0053, 32.0120, 60.0).isEmpty())
+        // Under the limit the alert says so.
+        assertEquals("מצלמת רמזור בעוד 280 מטר. מהירות תקינה.", drive(watcher(red), 32.0000, 32.0030, 45.0)[0].text)
+    }
+
+    @Test fun redLightCameraSilentAfterStopping() {
+        val w = watcher(cam.copy(kind = Camera.Kind.RED_LIGHT, limit = 50))
+        assertTrue(drive(w, 32.0000, 32.0040, 60.0).isNotEmpty())
+        assertNull(w.onLocation(32.0045, 34.8, 0.0, null))     // stopped at the light
+        assertTrue(drive(w, 32.0046, 32.0049, 30.0).isEmpty())  // green: drives on, silent
     }
 
     @Test fun speedingWithoutCamera() {
@@ -106,6 +116,9 @@ class CameraWatcherTest {
         assertTrue(a.repeat)
         assertNull(w.onLocation(32.002, 34.8, 80.0, 90.0))           // crossing, not along the road
         assertNull(w.onLocation(32.002, 34.8031, 80.0, 0.0))         // 290 m off the road
+        assertNull(w.onLocation(32.002, 34.8, 60.0, 0.0))            // slowing down, still over
+        assertEquals("מהירות תקינה. מותרת 50.", w.onLocation(32.002, 34.8, 48.0, 0.0)!!.text)
+        assertNull(w.onLocation(32.002, 34.8, 45.0, 0.0))            // said once
     }
 
     @Test fun speedingUsesTheFasterRoadBesideARamp() {

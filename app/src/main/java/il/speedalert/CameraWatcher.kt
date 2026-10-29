@@ -8,7 +8,8 @@ import kotlin.math.roundToInt
  * Decides what to say. From [ALERT_M] before a speed camera ahead, every fix returns the current
  * alert (distance, current speed, limit, how much to slow down, fine), so the service speaks
  * without a break until the camera is passed (user decision 2026-10-28). A red-light camera is
- * announced once, [RED_LIGHT_M] before it.
+ * announced from [RED_LIGHT_M] before it and repeated until it is passed or the car stops
+ * (user request 2026-10-29). At or under the limit the alert says "מהירות תקינה".
  *
  * Silence rules (field report 2026-10-28: alerts kept coming after the camera):
  * - a camera is passed when the distance to it grows while moving; it then stays silent until
@@ -54,9 +55,12 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
             s.lastDist = d
         }
 
+        // A red-light camera falls silent once the car stops at the light.
+        if (speedKmh < STOP_KMH) for (c in all) if (c.kind == Camera.Kind.RED_LIGHT) states[c.id]?.let { if (it.announced) it.passed = true }
+
         // A camera already announced keeps talking until it is passed, even when stopped
-        // at a light or when the heading jitters.
-        all.filter { c -> c.kind == Camera.Kind.SPEED && dist.getValue(c.id) <= ALERT_M &&
+        // at a light (speed cameras) or when the heading jitters.
+        all.filter { c -> dist.getValue(c.id) <= range(c) &&
                 states[c.id]?.let { it.announced && !it.passed } == true }
             .minByOrNull { dist.getValue(it.id) }
             ?.let { return Alert(message(it, dist.getValue(it.id), speedKmh), repeat = true) }
@@ -75,7 +79,7 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         val state = states[candidate.id] ?: run { states[candidate.id] = State(d); return null }
         if (!state.closing) return null
         state.announced = true
-        return Alert(message(candidate, d, speedKmh), repeat = candidate.kind == Camera.Kind.SPEED)
+        return Alert(message(candidate, d, speedKmh), repeat = true)
     }
 
     private fun range(c: Camera) = if (c.kind == Camera.Kind.SPEED) ALERT_M else RED_LIGHT_M
@@ -90,11 +94,14 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
 
     fun message(cam: Camera, dist: Double, speedKmh: Double): String {
         val metres = (Math.round(dist / 10.0) * 10).toInt()
-        if (cam.kind == Camera.Kind.RED_LIGHT) return "מצלמת רמזור בעוד $metres מטר."
+        if (cam.kind == Camera.Kind.RED_LIGHT) {
+            val ok = cam.limit?.let { speedKmh <= it } == true
+            return "מצלמת רמזור בעוד $metres מטר." + if (ok) " $OK" else ""
+        }
         val head = "מצלמת מהירות בעוד $metres מטר. מהירות נוכחית ${speedKmh.roundToInt()}."
         val limit = cam.limit ?: return head
         val over = ceil(speedKmh - limit).toInt()
-        if (over <= 0) return "$head מותרת $limit."
+        if (over <= 0) return "$head מותרת $limit. $OK"
         return "$head מותרת $limit. ${penalties.spoken(over, cam.urban)}"
     }
 
@@ -105,5 +112,7 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         const val CLUSTER_M = 300.0
         const val AHEAD_DEG = 35.0
         const val MIN_SPEED_KMH = 10.0
+        const val STOP_KMH = 5.0
+        const val OK = "מהירות תקינה."
     }
 }

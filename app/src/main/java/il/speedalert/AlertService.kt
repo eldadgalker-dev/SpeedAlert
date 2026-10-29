@@ -6,6 +6,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.annotation.SuppressLint
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -30,6 +31,10 @@ import android.speech.tts.UtteranceProgressListener
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.ActivityRecognition
+import com.google.android.gms.location.ActivityTransition
+import com.google.android.gms.location.ActivityTransitionRequest
+import com.google.android.gms.location.DetectedActivity
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
@@ -82,7 +87,36 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         startBattery = Usage.batteryLevel(this)
         status = "פועל. ${cameras.size} מצלמות במאגר."
         startLocation()
+        startActivityRecognition()
+        instance = this
         main.post(dataCheck)
+    }
+
+    private val activityIntent by lazy {
+        PendingIntent.getBroadcast(this, 2, Intent(this, ActivityReceiver::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or (if (Build.VERSION.SDK_INT >= 31) PendingIntent.FLAG_MUTABLE else 0))
+    }
+
+    /**
+     * Driving start and end from the phone's own activity recognition (Google Play services,
+     * user request 2026-10-29): the phone already tracks it for itself, so the app gets it for
+     * free. Optional: without the permission the speed and the motion sensor decide alone.
+     */
+    @SuppressLint("MissingPermission")
+    private fun startActivityRecognition() {
+        if (Build.VERSION.SDK_INT >= 29 && ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
+            != PackageManager.PERMISSION_GRANTED) return
+        val transitions = listOf(ActivityTransition.ACTIVITY_TRANSITION_ENTER, ActivityTransition.ACTIVITY_TRANSITION_EXIT).map {
+            ActivityTransition.Builder().setActivityType(DetectedActivity.IN_VEHICLE).setActivityTransition(it).build()
+        }
+        runCatching { ActivityRecognition.getClient(this).requestActivityTransitionUpdates(ActivityTransitionRequest(transitions), activityIntent) }
+            .onSuccess { recognition = true }
+    }
+
+    /** In a vehicle: GPS back at once. Left the vehicle: saving at once instead of after [IDLE_AFTER_MS]. */
+    private fun vehicle(enter: Boolean) {
+        if (enter) { if (saving) wake(); return }
+        if (!saving && speed < DRIVING_KMH && once.isEmpty() && !(ttsReady && tts.isSpeaking)) enterSaving()
     }
 
     private val main = Handler(Looper.getMainLooper())
@@ -114,7 +148,9 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     }
 
     override fun onDestroy() {
+        instance = null
         main.removeCallbacks(dataCheck)
+        if (recognition) runCatching { ActivityRecognition.getClient(this).removeActivityTransitionUpdates(activityIntent) }
         fused.removeLocationUpdates(callback)
         motion?.let { sensors.cancelTriggerSensor(trigger, it) }
         markMode(null)
@@ -244,21 +280,25 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         if (speedKmh >= DRIVING_KMH || lastDriving == 0L) { lastDriving = now; wokeByMotion = false }
         val idle = if (wokeByMotion) WAKE_IDLE_MS else IDLE_AFTER_MS
         if (now - lastDriving > idle && once.isEmpty() && !(ttsReady && tts.isSpeaking)) {
-            val m = motion
-            if (m != null && sensors.requestTriggerSensor(trigger, m)) {
-                fused.removeLocationUpdates(callback)
-                markMode(true)
-                motionSensor = true
-                status = "חיסכון בחשמל: ה-GPS כבוי. חיישן התנועה יפעיל אותו כשהרכב יזוז."
-            } else {
-                requestLocation(saving = true)
-                status = "חיסכון בחשמל: לא בנסיעה. ההתראות יחזרו כשהרכב יזוז."
-            }
-            speed = 0.0
-            if (ttsReady) restoreVolume()
+            enterSaving()
             return true
         }
         return false
+    }
+
+    private fun enterSaving() {
+        val m = motion
+        if (m != null && sensors.requestTriggerSensor(trigger, m)) {
+            fused.removeLocationUpdates(callback)
+            markMode(true)
+            motionSensor = true
+            status = "חיסכון בחשמל: ה-GPS כבוי. חיישן התנועה יפעיל אותו כשהרכב יזוז."
+        } else {
+            requestLocation(saving = true)
+            status = "חיסכון בחשמל: לא בנסיעה. ההתראות יחזרו כשהרכב יזוז."
+        }
+        speed = 0.0
+        if (ttsReady) restoreVolume()
     }
 
     /** Back to full-accuracy GPS after a motion trigger or movement in the fallback mode. */
@@ -329,6 +369,14 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         @Volatile var startBattery = -1
         @Volatile var saving = false        // power-saving location mode (not driving)
         @Volatile var motionSensor = false  // saving with GPS off, waiting for the motion sensor
+        @Volatile var recognition = false   // activity recognition (in a vehicle or not) is on
+        @Volatile private var instance: AlertService? = null
+
+        /** From [ActivityReceiver]: the phone entered or left a vehicle. */
+        fun onVehicle(enter: Boolean) {
+            val s = instance ?: return
+            s.main.post { s.vehicle(enter) }
+        }
         @Volatile private var modeSince = 0L
         @Volatile private var gpsTotal = 0L
         @Volatile private var savingTotal = 0L

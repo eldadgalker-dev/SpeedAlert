@@ -29,6 +29,8 @@
   .qr img { background: #fff; padding: 8px; border-radius: 10px; border: 1px solid var(--line); }
   .qr figcaption { color: var(--muted); flex: 1 1 220px; }
   footer { margin-top: 3rem; color: var(--muted); font-size: .9rem; }
+  footer p { margin: .15rem 0; }
+  footer p[dir="ltr"] { text-align: left; }
 </style>
 </head>
 <body>
@@ -50,7 +52,7 @@
     <li>פתח את הקובץ שהורד. אם מופיעה בקשה, אשר לדפדפן "להתקין אפליקציות ממקורות לא ידועים".</li>
     <li>אם <span lang="en" dir="ltr">Google Play Protect</span> מציג "אפליקציה לא מוכרת", בחר "פרטים נוספים" ואז "התקן בכל זאת". האפליקציה לא מופצת בחנות ולכן אינה מוכרת ל-<span lang="en" dir="ltr">Play Protect</span>.</li>
     <li>ודא שיש קול עברי: הגדרות ← המרת טקסט לדיבור ← שירותי הדיבור של <span lang="en" dir="ltr">Google</span> ← עברית.</li>
-    <li>פתח את SpeedAlert, לחץ "בדיקת קול", ואז "הפעל התראות". אשר מיקום מדויק והתראות.</li>
+    <li>פתח את SpeedAlert, לחץ "בדיקת קול", ואז "הפעל התראות". אשר מיקום מדויק, התראות ו"פעילות גופנית" (זיהוי פעילות, משמש רק לזיהוי נסיעה ברכב).</li>
     <li>מומלץ: הגדרות ← אפליקציות ← SpeedAlert ← סוללה ← "ללא הגבלה", כדי שהשירות לא ייעצר בנסיעה ארוכה.</li>
   </ol>
 
@@ -58,9 +60,11 @@
   <ul>
     <li>האפליקציה עוקבת אחרי המיקום, המהירות והכיוון ופועלת ברקע עם התראה קבועה: פעם בשנייה כשמצלמה קרובה (עד 1.5 ק"מ) או כשיש התראה, ופעם בשתי שניות בשאר הנסיעה. מאגר הכבישים נטען מחדש רק כשהוא עצמו השתנה.</li>
     <li>חיסכון בחשמל: אחרי 3 דקות בלי נסיעה (מתחת ל-15 קמ"ש) ובלי התראה, ה-<span lang="en" dir="ltr">GPS</span> נכבה לגמרי. חיישן תנועה חומרתי של הטלפון (צריכה זניחה, בלי קוד של האפליקציה שרץ בזמן ההמתנה) מעיר אותה כשהטלפון מתחיל לזוז, וה-<span lang="en" dir="ltr">GPS</span> חוזר מיד, כך שההתראות פועלות מהרגע שעוברים 15 קמ"ש. תזוזה בלי נסיעה (הליכה) מחזירה לחיסכון אחרי דקה וחצי. בטלפון בלי החיישן נבדק מיקום חסכוני פעם ב-15 שניות.</li>
+    <li>זיהוי נסיעה: שירות זיהוי הפעילות של הטלפון (<span lang="en" dir="ltr">Activity Recognition</span>, שכבר רץ במערכת ולא מוסיף צריכה לאפליקציה) מודיע כשמתחילים לנסוע ברכב, וה-<span lang="en" dir="ltr">GPS</span> חוזר מיד. כשהשירות מודיע שהנסיעה ברכב הסתיימה והרכב עומד, האפליקציה עוברת לחיסכון בלי לחכות 3 דקות.</li>
     <li>במסך הראשי: סוללה ומעבד של האפליקציה בלבד, בממוצע של הדקות האחרונות (עד 10). צריכת הסוללה היא הערכה (זמן מעבד וזמן <span lang="en" dir="ltr">GPS</span> של האפליקציה), כי <span lang="en" dir="ltr">Android</span> מוסר צריכה לפי אפליקציה רק לאפליקציות מערכת. המסך עצמו, כשהוא פתוח, מוסיף מעט למדידה.</li>
     <li>מצלמת מהירות: מ-500 מטר לפני מצלמה שבכיוון הנסיעה נשמעת התראה עם המרחק והמהירות הנוכחית, בעוצמה מלאה וללא הפסקה עד למעבר המצלמה, גם בעצירה לידה. לדוגמה: "מצלמת מהירות בעוד 480 מטר. מהירות נוכחית 120. מותרת 90. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות."</li>
-    <li>מצלמת רמזור: הודעה אחת, 300 מטר לפני המצלמה.</li>
+    <li>מצלמת רמזור: מ-300 מטר לפני המצלמה ההודעה חוזרת עד שעוברים את הרמזור או עד שעוצרים (מתחת ל-5 קמ"ש).</li>
+    <li>"מהירות תקינה": כשהמהירות בתוך המותר, ההודעה מסתיימת ב"מהירות תקינה". אחרי חריגת מהירות בלי מצלמה, כשחוזרים למותר נשמע פעם אחת "מהירות תקינה. מותרת 50".</li>
     <li>אכיפת נתיב תחבורה ציבורית (נת"צ) בכבישים 4, 5, 443, 461 ו-471: הודעה אחת בכניסה לקטע האכיפה.</li>
     <li>חריגת מהירות גם בלי מצלמה: כשהמהירות גבוהה ב-30 קמ"ש ומעלה מהמותר בכביש, נשמעת התראה חוזרת עד שמאטים. המהירות המותרת לקוחה מ-<span lang="en" dir="ltr">OpenStreetMap</span>; ברחוב מגורים בלי סימון מניחים 50, ובכביש בלי נתון אין התראה. כשכמה כבישים מקבילים צמודים (למשל רמפה לצד נתיבי איילון), נבחרת המהירות הגבוהה מביניהם.</li>
     <li>ההשמעה בעוצמה מרבית בכל מקרה: גם כשהטלפון בהשתקה, ברטט או בעוצמה נמוכה. האפליקציה מבטלת השתקה ומעלה לעוצמה מרבית את ערוצי ההתראה והמדיה כל עוד יש התראה, ומחזירה את העוצמה הקודמת אחרי שעוברים את המצלמה. מוזיקה וניווט מונמכים בזמן ההתראה.</li>
@@ -106,13 +110,28 @@
     <ul>
       <li>קטעי אכיפת נת"צ ושעות האכיפה: משרד התחבורה, דף "מצלמות אכיפה" באתר <a href="https://www.gov.il/he/pages/citizen_cameras"><span lang="en" dir="ltr">gov.il</span></a>.</li>
       <li>הקנסות והנקודות: צו התעבורה (עבירות קנס), התשס"ב-2002, ותקנות התעבורה, התשכ"א-1961, לפי הנוסח המשולב שפורסם ב<a href="https://www.nevo.co.il/law_html/law00/70383.htm">מאגר נבו</a>.</li>
-      <li>מיקומי מצלמות המהירות והרמזור ומהירויות הכבישים: <span lang="en" dir="ltr">OpenStreetMap</span>, מאגר מפה פתוח שמתוחזק בידי מתנדבים. זה אינו מקור ממשלתי ואינו רשמי.</li>
+      <li>מיקומי מצלמות המהירות והרמזור ומהירויות הכבישים: <span lang="en" dir="ltr">OpenStreetMap</span>, מאגר מפה פתוח שמתוחזק בידי מתנדבים. זה אינו מקור ממשלתי ואינו רשמי: <a href="https://www.openstreetmap.org"><span lang="en" dir="ltr">openstreetmap.org</span></a>, רישיון <a href="https://opendatacommons.org/licenses/odbl/"><span lang="en" dir="ltr">ODbL</span></a>.</li>
+    </ul>
+    <p>מאגרי המידע הרשמיים של התקנות, הקנסות והנקודות:</p>
+    <ul>
+      <li><a href="https://www.gov.il/he/pages/traffic_regulations-10-2023">תקנות התעבורה, עדכון 10/2023</a> (<a href="https://www.gov.il/BlobFolder/policy/traffic_regulations-10-2023/he/%D7%A7%D7%95%D7%91%D7%A5%20%D7%AA%D7%A7%D7%A0%D7%95%D7%AA%2011.10.2023.pdf">קובץ התקנות, ⁦PDF⁩</a>).</li>
+      <li><a href="https://www.gov.il/he/pages/newlaws_8_2026">עדכוני חקיקה 8/2026</a>.</li>
+      <li><a href="https://www.gov.il/he/pages/scoring_system_traffic_offens?chapterindex=3">שיטת הניקוד לעבירות תעבורה</a>.</li>
+      <li><a href="https://www.gov.il/he/Search?query=%D7%AA%D7%A7%D7%A0%D7%95%D7%AA%20%D7%94%D7%AA%D7%A2%D7%91%D7%95%D7%A8%D7%94&amp;mainTypes=policy">חיפוש "תקנות התעבורה" באתר ⁦gov.il⁩</a>.</li>
+      <li><a href="https://www.gov.il/he/pages/citizen_cameras">מצלמות אכיפה, משרד התחבורה</a>.</li>
     </ul>
     <p>המידע נאסף ממקורות פומביים ומתעדכן אוטומטית. ייתכן שהוא חלקי, שגוי או לא מעודכן: מצלמות שנוספו, הוזזו או הוסרו, שינויי מהירות מותרת, שינויים בשעות האכיפה ועדכוני חקיקה בקנסות ובנקודות. אין לאפליקציה קשר למשרד התחבורה, למשטרת ישראל או לגוף ממשלתי אחר, והיא אינה מקור רשמי.</p>
     <p>האפליקציה ניתנת כמות שהיא (<span lang="en" dir="ltr">AS IS</span>), בלי אחריות מכל סוג, מפורשת או משתמעת, לנכונות המידע, לשלמותו או לעדכניותו, ולפעולת התוכנה: התראה שלא נשמעה, התראה שגויה, תקלה, צריכת סוללה או נתונים, או כל נזק ישיר או עקיף שייגרם משימוש בה או מהסתמכות עליה. היוצר אינו אחראי לקנסות, לנקודות, לתאונות או לכל תוצאה אחרת. האפליקציה אינה ייעוץ משפטי. האחריות לנהיגה זהירה, לציות לתמרורים ולמהירות המותרת ולשימוש בטלפון בזמן נסיעה לפי החוק היא של הנהג בלבד. השימוש באפליקציה מהווה הסכמה לתנאים אלה. תנאי הרישיון המלאים: <a href="https://github.com/eldadgalker-dev/SpeedAlert/blob/main/LICENSE.txt"><span lang="en" dir="ltr">LICENSE.txt</span></a>.</p>
   </div>
 
-  <footer><span lang="en" dir="ltr">Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/</span><br>רישיון: <span lang="en" dir="ltr">BSD-3-Clause</span>. נתוני מפה: <span lang="en" dir="ltr">© OpenStreetMap contributors, ODbL</span>. קוד המקור: <a href="https://github.com/eldadgalker-dev/SpeedAlert"><span lang="en" dir="ltr">github.com/eldadgalker-dev/SpeedAlert</span></a></footer>
+  <footer>
+    <p lang="en" dir="ltr">Copyright (c) 1986-2026 Eldad Galker</p>
+    <p lang="en" dir="ltr"><a href="mailto:eldad@galker.com">eldad@galker.com</a></p>
+    <p lang="en" dir="ltr"><a href="https://www.galker.com/software/">https://www.galker.com/software/</a></p>
+    <p>רישיון: <span lang="en" dir="ltr">BSD-3-Clause</span></p>
+    <p>נתוני מפה: <a href="https://www.openstreetmap.org/copyright"><span lang="en" dir="ltr">© OpenStreetMap contributors, ODbL</span></a></p>
+    <p>קוד המקור: <a href="https://github.com/eldadgalker-dev/SpeedAlert"><span lang="en" dir="ltr">github.com/eldadgalker-dev/SpeedAlert</span></a></p>
+  </footer>
 </main>
 </body>
 </html>
