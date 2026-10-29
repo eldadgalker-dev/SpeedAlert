@@ -1,6 +1,6 @@
 {
  "source": "OpenStreetMap contributors (ODbL), via Overpass API",
- "fetched": "2026-10-28",
+ "fetched": "2026-10-29",
  "count": 219,
  "cameras": [
   {
@@ -909,10 +909,10 @@
    "id": 3258018465,
    "lat": 32.14363,
    "lon": 34.894479,
-   "limit": 50,
-   "limitSource": "road",
+   "limit": null,
+   "limitSource": null,
    "direction": null,
-   "urban": true,
+   "urban": false,
    "kind": "speed",
    "name": null
   },
@@ -1919,8 +1919,8 @@
   },
   {
    "id": 5298946460,
-   "lat": 32.822874,
-   "lon": 35.15164,
+   "lat": 32.822876,
+   "lon": 35.151659,
    "limit": 90,
    "limitSource": "camera",
    "direction": null,
