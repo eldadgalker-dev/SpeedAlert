@@ -109,15 +109,33 @@ object AppUpdate {
         return (if (r.versionCode > BuildConfig.VERSION_CODE) r else null).also { available = it }
     }
 
-    /** Downloads the APK to cache/updates and verifies its SHA-256 before it may be installed. */
+    /**
+     * Downloads the APK to cache/updates and verifies its SHA-256 before it may be installed.
+     * Hashed while it streams and written under a name of its own, then renamed: a second
+     * download, or the system clearing the cache, can no longer remove the file between the
+     * write and the check (field report 2026-10-29: "open failed: ENOENT").
+     */
+    @Synchronized
     fun download(ctx: Context, r: RemoteVersion): File {
-        val dir = File(ctx.cacheDir, "updates").apply { mkdirs(); listFiles()?.forEach { it.delete() } }
-        val apk = File(dir, APK)
-        Http.open("${BuildConfig.RELEASE_URL}/$APK").inputStream.use { i -> apk.outputStream().use { i.copyTo(it) } }
-        if (Http.sha256(apk) != r.sha256) {
-            apk.delete()
+        val dir = File(ctx.cacheDir, "updates")
+        val apk = File(dir, "SpeedAlert-${r.versionCode}.apk")
+        val part = File(dir, "${apk.name}.part")
+        dir.listFiles()?.forEach { if (it != apk) it.delete() }
+        if (apk.isFile && Http.sha256(apk) == r.sha256) return apk
+        dir.mkdirs()
+        val md = MessageDigest.getInstance("SHA-256")
+        Http.open("${BuildConfig.RELEASE_URL}/$APK").inputStream.use { i ->
+            part.outputStream().use { o ->
+                val buf = ByteArray(64 * 1024)
+                while (true) { val n = i.read(buf); if (n < 0) break; md.update(buf, 0, n); o.write(buf, 0, n) }
+            }
+        }
+        if (md.digest().joinToString("") { "%02x".format(it) } != r.sha256) {
+            part.delete()
             throw SecurityException("APK hash mismatch")
         }
+        apk.delete()
+        if (!part.renameTo(apk)) throw IOException("cannot keep the downloaded APK")
         return apk
     }
 

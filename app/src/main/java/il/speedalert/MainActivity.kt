@@ -16,6 +16,9 @@ import android.os.Handler
 import android.os.Looper
 import android.view.Gravity
 import android.view.View
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -62,7 +65,20 @@ class MainActivity : Activity() {
             layoutDirection = View.LAYOUT_DIRECTION_RTL
             setBackgroundColor(pal.bg)
         }
-        root.addView(header())
+        val header = header()
+        root.addView(header)
+        // Android 15 draws every app edge to edge (targetSdk 35): the red title bar runs under the
+        // status bar and its content starts below it (field report 2026-10-29: title under the clock).
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val b = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            header.setPadding(px(20) + b.left, px(14) + b.top, px(20) + b.right, px(14))
+            v.setPadding(0, 0, 0, b.bottom)
+            insets
+        }
+        WindowCompat.getInsetsController(window, root).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = !dark
+        }
 
         val body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -187,7 +203,7 @@ class MainActivity : Activity() {
         show(K_DATA, AlertService.dataInfo.ifEmpty { "בודק…" }, AlertService.dataNote)
         val newer = AppUpdate.available
         show(K_VERSION, "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-            if (newer == null) "" else "גרסה ${newer.versionName} זמינה: לחץ \"בדיקת עדכון\"")
+            if (newer == null) "" else "גרסה ${newer.versionName} זמינה: לחץ \"בדוק עדכון\"")
     }
 
     private fun minutes(ms: Long): String {
@@ -247,12 +263,11 @@ class MainActivity : Activity() {
     // ---- actions ----
 
     /**
-     * Launch-time checks: the app version every time (user request 2026-10-29), the data when the
-     * service is not running (it checks both every 30 minutes itself).
+     * Launch-time data check when the service is not running (it checks every 30 minutes itself);
+     * the app version is checked in [checkVersion].
      */
     private fun checkDataAtLaunch() {
         Thread {
-            runCatching { AppUpdate.check() }
             if (AlertService.running) return@Thread
             AlertService.dataInfo = "${Database.cameras(this).size} מצלמות"
             AlertService.dataNote = runCatching {
@@ -263,13 +278,28 @@ class MainActivity : Activity() {
         }.start()
     }
 
+    @Volatile private var updating = false
+
+    /**
+     * Version check whenever the screen opens or comes back (user request 2026-10-29: at every
+     * launch), at most once a minute; the service also checks with every data check.
+     */
+    private fun checkVersion() {
+        val now = System.currentTimeMillis()
+        if (now - lastVersionCheck < 60_000) return
+        lastVersionCheck = now
+        Thread { runCatching { AppUpdate.check() }.onFailure { lastVersionCheck = 0 } }.start()
+    }
+
     private fun checkAppUpdate() {
+        if (updating) return   // a second tap while downloading
         if (!AppUpdate.canInstall(this)) {
             updateText = getString(R.string.update_allow)
             startActivity(AppUpdate.unknownSourcesIntent(this))
             return
         }
         updateText = getString(R.string.update_checking)
+        updating = true
         Thread {
             updateText = try {
                 val remote = AppUpdate.check()
@@ -283,12 +313,15 @@ class MainActivity : Activity() {
                 }
             } catch (e: Exception) {
                 getString(R.string.update_failed, e.message ?: e.javaClass.simpleName)
+            } finally {
+                updating = false
             }
         }.start()
     }
 
     override fun onResume() {
         super.onResume()
+        checkVersion()
         ui.post(refresh)
     }
 
@@ -327,6 +360,7 @@ class MainActivity : Activity() {
     }
 
     companion object {
+        @Volatile private var lastVersionCheck = 0L
         const val HELP_URL = "https://eldadgalker-dev.github.io/SpeedAlert/"
         private const val RED = 0xFFC62828.toInt()
         private const val GREEN = 0xFF2E7D32.toInt()

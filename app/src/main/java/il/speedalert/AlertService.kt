@@ -305,7 +305,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         nm.notify(2, NotificationCompat.Builder(this, UPDATES)
             .setSmallIcon(R.drawable.ic_notify)
             .setContentTitle("גרסה ${r.versionName} זמינה")
-            .setContentText("פתח את SpeedAlert ולחץ \"בדיקת עדכון\".")
+            .setContentText("פתח את SpeedAlert ולחץ \"בדוק עדכון\".")
             .setContentIntent(open).setAutoCancel(true).build())
     }
 
