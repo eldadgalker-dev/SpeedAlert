@@ -11,6 +11,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.hardware.Sensor
+import android.hardware.SensorManager
+import android.hardware.TriggerEvent
+import android.hardware.TriggerEventListener
 import android.location.Location
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
@@ -48,7 +52,14 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private var focus: AudioFocusRequest? = null
     private val fused by lazy { LocationServices.getFusedLocationProviderClient(this) }
     private var lastDriving = 0L                    // last fix at driving speed
-    private var savingFrom: Location? = null        // first fix in power-saving mode
+    private var savingFrom: Location? = null        // first fix in power-saving mode (no motion sensor)
+    private var fast = true                         // GPS once a second (near a camera or alerting)
+    private var wokeByMotion = false                // GPS back on a motion trigger, no driving seen yet
+    private val sensors by lazy { getSystemService(SENSOR_SERVICE) as SensorManager }
+    private val motion: Sensor? by lazy { sensors.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION) }
+    private val trigger = object : TriggerEventListener() {
+        override fun onTrigger(event: TriggerEvent?) { main.post { if (saving) wake() } }
+    }
 
     private val callback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
@@ -80,13 +91,13 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private val dataCheck = object : Runnable {
         override fun run() {
             Thread {
-                val changed = runCatching { DataUpdate.run(this@AlertService) }.getOrDefault(false)
-                if (changed) {
+                val changed = runCatching { DataUpdate.run(this@AlertService) }.getOrNull()
+                if (changed?.any == true) {
                     val cams = Database.cameras(this@AlertService)
                     watcher.replaceTables(cams, Database.penalties(this@AlertService))
                     speeding.penalties = Database.penalties(this@AlertService)
                     runCatching { busLanes.lanes = Database.busLanes(this@AlertService) }
-                    runCatching { speeding.roads = Database.roads(this@AlertService) }
+                    if (changed.roads) runCatching { speeding.roads = Database.roads(this@AlertService) }
                     dataInfo = "עודכן: ${cams.size} מצלמות (${Database.fetched(this@AlertService)})"
                 }
             }.start()
@@ -105,6 +116,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     override fun onDestroy() {
         main.removeCallbacks(dataCheck)
         fused.removeLocationUpdates(callback)
+        motion?.let { sensors.cancelTriggerSensor(trigger, it) }
         markMode(null)
         tts.shutdown()
         restoreVolume()
@@ -147,6 +159,9 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         val alerts = listOfNotNull(camera, busLanes.onLocation(lat, lon, speedKmh, heading),
             if (camera?.repeat == true) null else speeding.onLocation(lat, lon, speedKmh, heading))
         alerts.filter { !it.repeat }.forEach { once.addLast(it.text) }
+        // GPS once a second only near a camera or while an alert lasts; every [SLOW_MS] elsewhere.
+        val wantFast = alerts.isNotEmpty() || watcher.nearestM < if (fast) FAST_EXIT_M else FAST_ENTER_M
+        if (wantFast != fast) { fast = wantFast; requestLocation(saving = false) }
         val repeating = alerts.firstOrNull { it.repeat }?.text
         if ((ttsReady && tts.isSpeaking) || System.currentTimeMillis() < beepsUntil) return
         // Continuous: the next sentence (with fresh distance and speed) starts as soon as the last ends.
@@ -209,30 +224,50 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     }
 
     /**
-     * Saves power when not driving (user request 2026-10-29): after [IDLE_AFTER_MS] below
-     * [DRIVING_KMH] with no alert due, GPS is switched off and a balanced (network) fix every
-     * [SAVING_INTERVAL_MS] only watches for the car to move; after [WAKE_M] of movement, or at a
-     * driving speed, full-accuracy GPS once a second comes back. Returns true while saving.
+     * Saves power when not driving (user requests 2026-10-29): after [IDLE_AFTER_MS] below
+     * [DRIVING_KMH] with no alert due, location is switched off and the phone's significant-motion
+     * sensor (a low-power hardware trigger, no app code runs while it waits) wakes the app when
+     * the phone starts to move; full-accuracy GPS once a second then comes back at once, so the
+     * alerts work from the first fix above [DRIVING_KMH]. A wake that is not followed by driving
+     * (walking, a bump) goes back to saving after [WAKE_IDLE_MS]. Phones without the sensor
+     * fall back to a balanced (network) fix every [SAVING_INTERVAL_MS] and wake after [WAKE_M].
+     * Returns true while saving.
      */
     private fun powerSaving(loc: Location, speedKmh: Double): Boolean {
         val now = System.currentTimeMillis()
         if (saving) {
             val from = savingFrom ?: run { savingFrom = loc; return true }
             if (speedKmh < DRIVING_KMH && from.distanceTo(loc) <= WAKE_M) return true
-            lastDriving = now
-            requestLocation(saving = false)
-            status = "ממתין לתנועה"
+            wake()
             return false
         }
-        if (speedKmh >= DRIVING_KMH || lastDriving == 0L) lastDriving = now
-        if (now - lastDriving > IDLE_AFTER_MS && once.isEmpty() && !(ttsReady && tts.isSpeaking)) {
-            requestLocation(saving = true)
+        if (speedKmh >= DRIVING_KMH || lastDriving == 0L) { lastDriving = now; wokeByMotion = false }
+        val idle = if (wokeByMotion) WAKE_IDLE_MS else IDLE_AFTER_MS
+        if (now - lastDriving > idle && once.isEmpty() && !(ttsReady && tts.isSpeaking)) {
+            val m = motion
+            if (m != null && sensors.requestTriggerSensor(trigger, m)) {
+                fused.removeLocationUpdates(callback)
+                markMode(true)
+                motionSensor = true
+                status = "חיסכון בחשמל: ה-GPS כבוי. חיישן התנועה יפעיל אותו כשהרכב יזוז."
+            } else {
+                requestLocation(saving = true)
+                status = "חיסכון בחשמל: לא בנסיעה. ההתראות יחזרו כשהרכב יזוז."
+            }
             speed = 0.0
-            status = "חיסכון בחשמל: לא בנסיעה. ההתראות יחזרו כשהרכב יזוז."
             if (ttsReady) restoreVolume()
             return true
         }
         return false
+    }
+
+    /** Back to full-accuracy GPS after a motion trigger or movement in the fallback mode. */
+    private fun wake() {
+        lastDriving = System.currentTimeMillis()
+        wokeByMotion = true
+        fast = true
+        requestLocation(saving = false)
+        status = "ממתין לתנועה"
     }
 
     private fun startLocation() {
@@ -245,12 +280,15 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         requestLocation(saving = false)
     }
 
-    /** Switches between full-accuracy GPS once a second and the power-saving balanced mode. */
+    /** Switches between full-accuracy GPS (every second or [SLOW_MS]) and the power-saving balanced mode. */
     private fun requestLocation(saving: Boolean) {
+        motion?.let { sensors.cancelTriggerSensor(trigger, it) }
+        motionSensor = false
         markMode(saving)
         savingFrom = null
         val req = if (saving) LocationRequest.Builder(Priority.PRIORITY_BALANCED_POWER_ACCURACY, SAVING_INTERVAL_MS).build()
-            else LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000L).setMinUpdateIntervalMillis(500L).build()
+            else LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, if (fast) 1000L else SLOW_MS)
+                .setMinUpdateIntervalMillis(500L).build()
         fused.removeLocationUpdates(callback)
         fused.requestLocationUpdates(req, callback, Looper.getMainLooper())
     }
@@ -290,6 +328,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         @Volatile var startedAt = 0L
         @Volatile var startBattery = -1
         @Volatile var saving = false        // power-saving location mode (not driving)
+        @Volatile var motionSensor = false  // saving with GPS off, waiting for the motion sensor
         @Volatile private var modeSince = 0L
         @Volatile private var gpsTotal = 0L
         @Volatile private var savingTotal = 0L
@@ -297,6 +336,10 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         private const val IDLE_AFTER_MS = 3 * 60_000L
         private const val SAVING_INTERVAL_MS = 15_000L
         private const val WAKE_M = 80f
+        private const val WAKE_IDLE_MS = 90_000L
+        private const val SLOW_MS = 2000L
+        private const val FAST_ENTER_M = 1500.0  // 500 m alert range + 30 s at 120 km/h
+        private const val FAST_EXIT_M = 2000.0
 
         /** Closes the time of the current location mode; [next] null when location stops. */
         private fun markMode(next: Boolean?) {

@@ -41,11 +41,13 @@ object DataUpdate {
     const val INTERVAL_MS = 30 * 60_000L
 
     /**
-     * Downloads the tables, keeps them only when they parse; returns true when anything changed.
-     * roads.txt (~9 MB) is downloaded only when roads.version (its sha256) changed.
+     * Downloads the tables, keeps them only when they parse; says what changed, so the service
+     * re-parses roads.txt (heavy) only when it changed.
+     * roads.txt (~12 MB) is downloaded only when roads.version (its sha256) changed.
      */
-    fun run(ctx: Context): Boolean {
+    fun run(ctx: Context): Changed {
         var changed = false
+        var roadsChanged = false
         for (name in listOf(Database.CAMERAS, Database.PENALTIES, Database.BUS_LANES)) {
             val text = Http.text("${BuildConfig.DATA_URL}/$name")
             validate(name, text)
@@ -62,9 +64,13 @@ object DataUpdate {
             validate(Database.ROADS, roads)
             save(ctx, Database.ROADS, roads)
             save(ctx, ROADS_VERSION, version)
-            changed = true
+            roadsChanged = true
         }
-        return changed
+        return Changed(changed, roadsChanged)
+    }
+
+    class Changed(val tables: Boolean, val roads: Boolean) {
+        val any get() = tables || roads
     }
 
     private fun save(ctx: Context, name: String, text: String) {

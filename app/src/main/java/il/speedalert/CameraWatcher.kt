@@ -27,6 +27,10 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
     @Volatile private var penalties: Penalties = penalties
     private val states = mutableMapOf<Long, State>()
 
+    /** Distance to the nearest camera at the last fix, metres. */
+    var nearestM = Double.MAX_VALUE
+        private set
+
     /** Replaces the tables (data update from GitHub) without losing what was announced. */
     fun replaceTables(newCameras: List<Camera>, newPenalties: Penalties) {
         cameras = newCameras
@@ -38,6 +42,7 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         val all = cameras
         val dist = all.associate { it.id to Geo.distance(lat, lon, it.lat, it.lon) }
         val moving = speedKmh >= MIN_SPEED_KMH
+        nearestM = dist.values.minOrNull() ?: Double.MAX_VALUE
 
         // Forget only with hysteresis, so GPS jitter near the limit cannot re-arm a camera.
         states.keys.retainAll { (dist[it] ?: Double.MAX_VALUE) < FORGET_M }

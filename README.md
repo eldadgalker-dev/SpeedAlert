@@ -5,10 +5,12 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 
 ## What it does
 
-- Foreground service follows GPS once per second: position, speed, heading. After 3 minutes below
-  15 km/h with no alert it switches to a balanced (network) fix every 15 s, and back to full GPS
-  after about 80 m of movement or a driving speed.
-- Main screen: battery (estimate from the app's CPU and GPS time) and CPU of this app only; dates as dd.mm.yyyy.
+- Foreground service follows GPS: once per second within 1.5 km of a camera or while alerting, every 2 s otherwise. After 3 minutes below
+  15 km/h with no alert, location stops and the significant-motion sensor (hardware trigger) wakes
+  full GPS when the phone moves; a wake without driving goes back to saving after 90 s. Without that
+  sensor: a balanced (network) fix every 15 s, back to full GPS after about 80 m.
+- Main screen: battery (estimate from the app's CPU and GPS time) and CPU of this app only, over the
+  last minutes (up to 10); dates as dd/mm/yyyy.
 - Every announcement opens with three loud, harsh beeps on the alarm stream (every sentence, repeats of a continuous alert included).
 - A camera counts only when it is ahead (within 35° of the heading) and not facing across the road.
 - Speed camera: from 500 m before it the alert repeats without a break, with the current

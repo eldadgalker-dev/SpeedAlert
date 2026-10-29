@@ -120,7 +120,7 @@ class CameraWatcherTest {
     }
 
     @Test fun israeliDate() {
-        assertEquals("28.10.2026", Database.israeliDate("2026-10-28"))
+        assertEquals("28/10/2026", Database.israeliDate("2026-10-28"))
         assertEquals("?", Database.israeliDate("?"))
     }
 

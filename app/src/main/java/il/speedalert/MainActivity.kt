@@ -37,6 +37,7 @@ class MainActivity : Activity() {
     private var afterGrant: (() -> Unit)? = null
     @Volatile private var updateText = ""
     private val ui = Handler(Looper.getMainLooper())
+    private var renders = 0
     private val refresh = object : Runnable {
         override fun run() {
             render()
@@ -161,13 +162,15 @@ class MainActivity : Activity() {
         val level = Usage.batteryLevel(this)
         val charging = Usage.charging(this)
         info.getValue(K_BATTERY).text = "$level%" + if (charging) " (בטעינה)" else ""
-        val drain = Usage.appDrainPerHour(this, AlertService.gpsMs(), AlertService.savingMs())
+        val recent = Usage.recent(this, AlertService.gpsMs(), AlertService.savingMs(), AlertService.motionSensor)
         info.getValue(K_DRAIN).text = when {
-            drain == null -> "נמדד…"
-            else -> "%.1f%% לשעה, הערכה".format(drain) + if (running && AlertService.saving) " (חיסכון: לא בנסיעה)" else ""
+            recent == null -> "נמדד…"
+            else -> "%.2f%% לשעה, הערכה, ב-%d הדקות האחרונות".format(recent.drainPerHour, recent.minutes) +
+                if (running && AlertService.saving) " (חיסכון: לא בנסיעה)" else ""
         }
-        info.getValue(K_MEMORY).text = "${Usage.memoryMb(this)} MB"
-        info.getValue(K_CPU).text = "%.1f%% מהמעבד, בממוצע".format(Usage.cpuPercent())
+        // Memory info is a slow system call: every 10th refresh only.
+        if (renders++ % 10 == 0) info.getValue(K_MEMORY).text = "${Usage.memoryMb(this)} MB"
+        info.getValue(K_CPU).text = if (recent == null) "נמדד…" else "%.2f%% מהמעבד, ב-%d הדקות האחרונות".format(recent.cpuPercent, recent.minutes)
         info.getValue(K_UPTIME).text = if (running) minutes(System.currentTimeMillis() - AlertService.startedAt) else "–"
         info.getValue(K_DATA).text = AlertService.dataInfo.ifEmpty { "בודק…" }
         info.getValue(K_VERSION).text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
@@ -223,7 +226,7 @@ class MainActivity : Activity() {
         if (AlertService.running) return
         Thread {
             AlertService.dataInfo = runCatching {
-                val changed = DataUpdate.run(this)
+                val changed = DataUpdate.run(this).any
                 val n = Database.cameras(this).size
                 (if (changed) "עודכן: " else "") + "$n מצלמות (${Database.fetched(this)})"
             }.getOrElse { "${Database.cameras(this).size} מצלמות (${Database.fetched(this)}), הבדיקה נכשלה" }
