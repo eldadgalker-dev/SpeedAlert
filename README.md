@@ -25,7 +25,7 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 - Bus-lane enforcement (Ministry of Transport sections on roads 4, 5, 443, 461, 471): once when
   entering a section: "אכיפת נתיב תחבורה ציבורית בכביש 443. אסור לנסוע בנתיב התחבורה הציבורית."
 - Speeding without a camera: 30 km/h or more above the limit of the road under the car
-  (3 fixes in a row), repeated while it lasts: "חריגת מהירות. מהירות נוכחית 82. מותרת 50. ..."
+  (3 fixes in a row), repeated every 20 seconds until the speed is back at or under the limit: "חריגת מהירות. מהירות נוכחית 82. מותרת 50. ..."
 - Audio: alarm stream (plays in silent and vibrate mode), unmuted and set to maximum together
   with the media stream for as long as an alert is due, then restored; other audio is ducked.
   "Do not disturb" in total-silence mode blocks even alarms; the app shows a warning then.

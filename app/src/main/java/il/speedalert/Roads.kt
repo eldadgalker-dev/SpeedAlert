@@ -133,30 +133,35 @@ private class IntList {
 
 /**
  * Speaks without a camera when the speed is [OVER_KMH] or more above the limit of the road
- * (user request 2026-10-28). Starts after [CONFIRM] fixes in a row, then repeats while it lasts.
+ * (user request 2026-10-28). Starts after [CONFIRM] fixes in a row, then repeats every [REPEAT_MS]
+ * while the speed is above the limit at all, until it is back at or under it (user request 2026-10-30).
  */
 class SpeedingWatcher(@Volatile var penalties: Penalties) {
     @Volatile var roads: RoadLookup? = null
     private var streak = 0
-    private var owed = false   // an alert was given; say once when back at or under the limit
+    private var owed = false   // an alert was given; repeat it until back at or under the limit, then say so once
+    private var lastMs = 0L
 
-    fun onLocation(lat: Double, lon: Double, speedKmh: Double, heading: Double?): Alert? {
+    fun onLocation(lat: Double, lon: Double, speedKmh: Double, heading: Double?, nowMs: Long): Alert? {
         val r = roads
-        val m = if (r == null || heading == null) null else r.at(lat, lon, heading)
-        val over = if (m == null) 0 else kotlin.math.ceil(speedKmh - m.limit).toInt()
-        if (m == null || over < OVER_KMH) {
-            streak = 0
-            if (owed && m != null && over <= 0) { owed = false; return Alert("${CameraWatcher.OK} מותרת ${m.limit}.", repeat = false) }
-            return null
+        val m = (if (r == null || heading == null) null else r.at(lat, lon, heading)) ?: run { streak = 0; return null }
+        val over = kotlin.math.ceil(speedKmh - m.limit).toInt()
+        if (owed) {
+            if (over <= 0) { owed = false; streak = 0; return Alert("${CameraWatcher.OK} מותרת ${m.limit}.", repeat = false) }
+            if (nowMs - lastMs < REPEAT_MS) return null
+        } else {
+            if (over < OVER_KMH) { streak = 0; return null }
+            if (++streak < CONFIRM) return null
+            owed = true
         }
-        if (++streak < CONFIRM) return null
-        owed = true
+        lastMs = nowMs
         return Alert("חריגת מהירות. מהירות נוכחית ${speedKmh.roundToInt()}. מותרת ${m.limit}. ${penalties.spoken(over, m.urban)}",
-            repeat = true)
+            repeat = false)
     }
 
     companion object {
         const val OVER_KMH = 30
         const val CONFIRM = 3
+        const val REPEAT_MS = 20_000L
     }
 }

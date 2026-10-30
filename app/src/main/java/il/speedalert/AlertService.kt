@@ -202,7 +202,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         val camera = watcher.onLocation(lat, lon, speedKmh, heading)
         val alerts = listOfNotNull(camera, busLanes.onLocation(lat, lon, speedKmh, heading),
             average.onLocation(lat, lon, speedKmh, heading, loc.time),
-            if (camera?.repeat == true) null else speeding.onLocation(lat, lon, speedKmh, heading))
+            if (camera?.repeat == true) null else speeding.onLocation(lat, lon, speedKmh, heading, loc.time))
         alerts.filter { !it.repeat }.forEach { once.addLast(it.text) }
         // GPS once a second only near a camera or while an alert lasts; every [SLOW_MS] elsewhere.
         val wantFast = alerts.isNotEmpty() || watcher.nearestM < if (fast) FAST_EXIT_M else FAST_ENTER_M

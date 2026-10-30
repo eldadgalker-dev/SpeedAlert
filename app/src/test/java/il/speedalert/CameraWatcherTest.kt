@@ -2,6 +2,7 @@
 package il.speedalert
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -108,17 +109,23 @@ class CameraWatcherTest {
         // A north-south road, limit 50, urban: "50 1 lat lon dlat dlon".
         val roads = Roads.parse("# test\n50 1 3200000 3480000 1000 0\n")
         val w = SpeedingWatcher(penalties).apply { this.roads = roads }
-        assertNull(w.onLocation(32.002, 34.8, 75.0, 0.0))            // 25 over: no alert
-        assertNull(w.onLocation(32.002, 34.8, 80.0, 0.0))            // 30 over: confirming
-        assertNull(w.onLocation(32.002, 34.8, 80.0, 0.0))
-        val a = w.onLocation(32.002, 34.8, 80.0, 180.0)              // either direction of the road
+        assertNull(w.onLocation(32.002, 34.8, 75.0, 0.0, 0))            // 25 over: no alert
+        assertNull(w.onLocation(32.002, 34.8, 80.0, 0.0, 1000))         // 30 over: confirming
+        assertNull(w.onLocation(32.002, 34.8, 80.0, 0.0, 2000))
+        val a = w.onLocation(32.002, 34.8, 80.0, 180.0, 3000)           // either direction of the road
         assertEquals("חריגת מהירות. מהירות נוכחית 80. מותרת 50. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות.", a!!.text)
-        assertTrue(a.repeat)
-        assertNull(w.onLocation(32.002, 34.8, 80.0, 90.0))           // crossing, not along the road
-        assertNull(w.onLocation(32.002, 34.8031, 80.0, 0.0))         // 290 m off the road
-        assertNull(w.onLocation(32.002, 34.8, 60.0, 0.0))            // slowing down, still over
-        assertEquals("מהירות תקינה. מותרת 50.", w.onLocation(32.002, 34.8, 48.0, 0.0)!!.text)
-        assertNull(w.onLocation(32.002, 34.8, 45.0, 0.0))            // said once
+        assertFalse(a.repeat)                                           // spoken once, again every 20 s
+        assertNull(w.onLocation(32.002, 34.8, 80.0, 0.0, 4000))
+        assertNull(w.onLocation(32.002, 34.8, 80.0, 90.0, 23_000))      // crossing, not along the road
+        assertNull(w.onLocation(32.002, 34.8031, 80.0, 0.0, 23_000))    // 290 m off the road
+        assertNull(w.onLocation(32.002, 34.8, 60.0, 0.0, 22_999))       // slowing down, still over
+        assertEquals("חריגת מהירות. מהירות נוכחית 60. מותרת 50. הוֹרֵד 10 קילומטר לשעה. קנס 250 שקלים, ללא נקודות.",
+            w.onLocation(32.002, 34.8, 60.0, 0.0, 23_000)!!.text)       // 20 s later, still over: again
+        assertNull(w.onLocation(32.002, 34.8, 51.0, 0.0, 42_999))
+        assertNotNull(w.onLocation(32.002, 34.8, 51.0, 0.0, 43_000))   // 1 over: still repeats
+        assertEquals("מהירות תקינה. מותרת 50.", w.onLocation(32.002, 34.8, 48.0, 0.0, 44_000)!!.text)
+        assertNull(w.onLocation(32.002, 34.8, 45.0, 0.0, 70_000))       // said once
+        assertNull(w.onLocation(32.002, 34.8, 60.0, 0.0, 71_000))       // 10 over again: under the start threshold
     }
 
     @Test fun speedingUsesTheFasterRoadBesideARamp() {
@@ -127,7 +134,7 @@ class CameraWatcherTest {
             "0 0 3200000 3490000 1000 0").joinToString("\n"))
         assertEquals(90, roads.at(32.002, 34.80008, 0.0)!!.limit)
         val w = SpeedingWatcher(penalties).apply { this.roads = roads }
-        repeat(5) { assertNull(w.onLocation(32.002, 34.80008, 100.0, 0.0)) }
+        repeat(5) { assertNull(w.onLocation(32.002, 34.80008, 100.0, 0.0, it * 1000L)) }
         // Unknown limit (0) on the road: no alert at any speed.
         assertNull(roads.at(32.002, 34.9, 0.0))
     }
