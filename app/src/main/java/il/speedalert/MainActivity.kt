@@ -3,6 +3,7 @@ package il.speedalert
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
@@ -284,11 +285,30 @@ class MainActivity : Activity() {
      * Version check whenever the screen opens or comes back (user request 2026-10-29: at every
      * launch), at most once a minute; the service also checks with every data check.
      */
+    /**
+     * Every time the app comes to the screen (user request 2026-11-02): asks for the version and,
+     * when a newer one exists, offers it in a dialog instead of only a note in the version row.
+     */
     private fun checkVersion() {
         val now = System.currentTimeMillis()
-        if (now - lastVersionCheck < 60_000) return
+        if (now - lastVersionCheck < 5_000) return   // two resumes in a row (permission screens)
         lastVersionCheck = now
-        Thread { runCatching { AppUpdate.check() }.onFailure { lastVersionCheck = 0 } }.start()
+        Thread {
+            val r = runCatching { AppUpdate.check() }.onFailure { lastVersionCheck = 0 }.getOrNull() ?: return@Thread
+            ui.post { offerUpdate(r) }
+        }.start()
+    }
+
+    private var updateDialog: AlertDialog? = null
+
+    private fun offerUpdate(r: RemoteVersion) {
+        if (isFinishing || isDestroyed || updating || updateDialog?.isShowing == true) return
+        updateDialog = AlertDialog.Builder(this)
+            .setTitle("עדכון זמין")
+            .setMessage("גרסה ${r.versionName} זמינה. מותקנת ${BuildConfig.VERSION_NAME}.")
+            .setPositiveButton("עדכן") { _, _ -> checkAppUpdate() }
+            .setNegativeButton("לא עכשיו", null)
+            .show()
     }
 
     private fun checkAppUpdate() {
