@@ -17,12 +17,19 @@ import kotlin.math.roundToInt
  * - cameras within [CLUSTER_M] of an announced camera (the opposite-direction twin,
  *   duplicate map points) are silent while that camera is remembered;
  * - a new camera starts only when two fixes confirm we are closing in on it.
+ *
+ * [passAt] marks the moment the car reaches an announced camera, for the pass sound
+ * (user request 2026-11-02).
  */
-/** What to say; [repeat] alerts are spoken again and again while they last, the others once. */
-data class Alert(val text: String, val repeat: Boolean)
+/**
+ * What to say; [repeat] alerts are spoken again and again while they last, the others once.
+ * [key] names the event, so the repeats of one event get one beep instead of three.
+ */
+data class Alert(val text: String, val repeat: Boolean, val key: String? = null)
 
 class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
-    private class State(var lastDist: Double, var announced: Boolean = false, var passed: Boolean = false, var closing: Boolean = false)
+    private class State(var lastDist: Double, var announced: Boolean = false, var passed: Boolean = false, var closing: Boolean = false,
+                        var beeped: Boolean = false)
 
     @Volatile private var cameras: List<Camera> = cameras
     @Volatile private var penalties: Penalties = penalties
@@ -30,6 +37,14 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
 
     /** Distance to the nearest camera at the last fix, metres. */
     var nearestM = Double.MAX_VALUE
+        private set
+
+    /**
+     * Set by the fix that sees an announced camera reached within [PASS_AHEAD_MS]: the camera id
+     * and the milliseconds left until the car is at it (0 when it was just passed between two
+     * fixes). Once per camera; null on the other fixes.
+     */
+    var passAt: Pair<Long, Long>? = null
         private set
 
     /** Replaces the tables (data update from GitHub) without losing what was announced. */
@@ -44,13 +59,20 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         val dist = all.associate { it.id to Geo.distance(lat, lon, it.lat, it.lon) }
         val moving = speedKmh >= MIN_SPEED_KMH
         nearestM = dist.values.minOrNull() ?: Double.MAX_VALUE
+        passAt = null
 
         // Forget only with hysteresis, so GPS jitter near the limit cannot re-arm a camera.
         states.keys.retainAll { (dist[it] ?: Double.MAX_VALUE) < FORGET_M }
         for ((id, s) in states) {
             val d = dist[id] ?: continue
             // Moving away means passed; while standing still GPS jitter must not end the alert.
-            if (moving && d > s.lastDist + 3) s.passed = true
+            val away = moving && d > s.lastDist + 3
+            if (s.announced && !s.beeped && moving) {
+                val eta = d / (speedKmh / 3.6) * 1000
+                if (away && s.lastDist < PASS_NEAR_M) { s.beeped = true; passAt = id to 0L }
+                else if (!away && eta <= PASS_AHEAD_MS) { s.beeped = true; passAt = id to eta.toLong() }
+            }
+            if (away) s.passed = true
             s.closing = d < s.lastDist - 1
             s.lastDist = d
         }
@@ -63,7 +85,7 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         all.filter { c -> dist.getValue(c.id) <= range(c) &&
                 states[c.id]?.let { it.announced && !it.passed } == true }
             .minByOrNull { dist.getValue(it.id) }
-            ?.let { return Alert(message(it, dist.getValue(it.id), speedKmh), repeat = true) }
+            ?.let { return Alert(message(it, dist.getValue(it.id), speedKmh), repeat = true, key = "$KEY${it.id}") }
 
         if (heading == null || !moving) return null
         val announced = all.filter { states[it.id]?.announced == true }
@@ -79,7 +101,7 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         val state = states[candidate.id] ?: run { states[candidate.id] = State(d); return null }
         if (!state.closing) return null
         state.announced = true
-        return Alert(message(candidate, d, speedKmh), repeat = true)
+        return Alert(message(candidate, d, speedKmh), repeat = true, key = "$KEY${candidate.id}")
     }
 
     private fun range(c: Camera) = if (c.kind == Camera.Kind.SPEED) ALERT_M else RED_LIGHT_M
@@ -114,5 +136,8 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         const val MIN_SPEED_KMH = 10.0
         const val STOP_KMH = 5.0
         const val OK = "מהירות תקינה."
+        const val KEY = "camera-"
+        const val PASS_AHEAD_MS = 1500.0   // more than the 1 s between fixes, so the sound is scheduled before the camera
+        const val PASS_NEAR_M = 150.0
     }
 }

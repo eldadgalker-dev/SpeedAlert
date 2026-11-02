@@ -13,7 +13,12 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
   once; leaving it while stopped goes to saving without the 3-minute wait.
 - Main screen: battery (estimate from the app's CPU and GPS time) and CPU of this app only, over the
   last minutes (up to 10); dates as dd/mm/yyyy.
-- Every announcement opens with three loud, harsh beeps on the alarm stream (every sentence, repeats of a continuous alert included).
+- Every alert opens with three loud, harsh beeps on the alarm stream; a continuous alert then repeats
+  without a break, with one beep between the sentences, until the event ends (slowing down, camera passed).
+- At the camera itself: a long two-tone sound, different from the beeps and louder to the ear; it cuts off
+  any sentence under way. It is timed from the speed so that it plays at the camera's point, not at the next GPS fix.
+- A camera alert silences a speeding alert at once, until the camera is passed.
+- A fine without points is said without "ללא נקודות".
 - A camera counts only when it is ahead (within 35° of the heading) and not facing across the road.
 - Speed camera: from 500 m before it the alert repeats without a break, with the current
   distance and speed, until the camera is passed (also while stopped near it):
@@ -25,7 +30,7 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 - Bus-lane enforcement (Ministry of Transport sections on roads 4, 5, 443, 461, 471): once when
   entering a section: "אכיפת נתיב תחבורה ציבורית בכביש 443. אסור לנסוע בנתיב התחבורה הציבורית."
 - Speeding without a camera: 30 km/h or more above the limit of the road under the car
-  (3 fixes in a row), repeated every 20 seconds until the speed is back at or under the limit: "חריגת מהירות. מהירות נוכחית 82. מותרת 50. ..."
+  (3 fixes in a row), repeated until the speed is back at or under the limit: "חריגת מהירות. מהירות נוכחית 82. מותרת 50. ..."
 - Audio: alarm stream (plays in silent and vibrate mode), unmuted and set to maximum together
   with the media stream for as long as an alert is due, then restored; other audio is ducked.
   "Do not disturb" in total-silence mode blocks even alarms; the app shows a warning then.

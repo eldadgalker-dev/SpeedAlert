@@ -59,10 +59,11 @@ class AverageSpeedWatcher(@Volatile var sections: List<AverageSection>) {
             budget <= 0 || remaining <= 0 -> "לא ניתן להשלים לממוצע המותר."
             else -> "סע עד ${(remaining / budget * 3.6).toInt().coerceAtMost(s.limit)} עד סוף הקטע."
         }
-        return Alert("מהירות ממוצעת בקטע ${average.roundToInt()}. מותרת ${s.limit}. מהירות נוכחית ${speedKmh.roundToInt()}. $advice", repeat = true)
+        return Alert("מהירות ממוצעת בקטע ${average.roundToInt()}. מותרת ${s.limit}. מהירות נוכחית ${speedKmh.roundToInt()}. $advice", repeat = true, key = KEY)
     }
 
     companion object {
+        const val KEY = "average"
         const val ENTER_M = 150.0
         const val EXIT_M = 300.0
         const val END_M = 40.0

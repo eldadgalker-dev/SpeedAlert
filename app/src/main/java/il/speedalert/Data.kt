@@ -33,7 +33,7 @@ class Penalties(private val urban: List<Band>, private val interurban: List<Band
         val tail = when {
             p == null -> ""
             p.court -> " הזמנה לדין, ${p.points} נקודות ופסילה."
-            p.points == 0 -> " קנס ${p.fine} שקלים, ללא נקודות."
+            p.points == 0 -> " קנס ${p.fine} שקלים."   // no "ללא נקודות" (user request 2026-11-02)
             else -> " קנס ${p.fine} שקלים ועוד ${p.points} נקודות."
         }
         // Niqqud: without it TTS reads "הורד" as "ורד" (rose).
