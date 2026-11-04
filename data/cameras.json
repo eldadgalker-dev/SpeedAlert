@@ -1,7 +1,7 @@
 {
  "source": "OpenStreetMap contributors (ODbL), via Overpass API",
  "fetched": "2026-11-04",
- "count": 215,
+ "count": 219,
  "cameras": [
   {
    "id": 34136717,
@@ -819,8 +819,8 @@
   },
   {
    "id": 3258005198,
-   "lat": 32.710479,
-   "lon": 34.970569,
+   "lat": 32.71049,
+   "lon": 34.970678,
    "limit": 80,
    "limitSource": "road",
    "direction": null,
@@ -909,10 +909,10 @@
    "id": 3258018465,
    "lat": 32.14363,
    "lon": 34.894479,
-   "limit": null,
-   "limitSource": null,
+   "limit": 50,
+   "limitSource": "road",
    "direction": null,
-   "urban": false,
+   "urban": true,
    "kind": "speed",
    "name": null
   },
@@ -1919,8 +1919,8 @@
   },
   {
    "id": 5298946460,
-   "lat": 32.822876,
-   "lon": 35.151659,
+   "lat": 32.822874,
+   "lon": 35.15164,
    "limit": 90,
    "limitSource": "camera",
    "direction": null,
@@ -1998,12 +1998,12 @@
    "id": 6772136671,
    "lat": 32.197049,
    "lon": 35.865077,
-   "limit": 60,
+   "limit": 80,
    "limitSource": "camera",
    "direction": 180.0,
-   "urban": true,
+   "urban": false,
    "kind": "speed",
-   "name": "السرعة 60"
+   "name": null
   },
   {
    "id": 6772139077,
@@ -2363,6 +2363,50 @@
    "lon": 34.935221,
    "limit": 120,
    "limitSource": "road",
+   "direction": null,
+   "urban": false,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 13970067232,
+   "lat": 32.241747,
+   "lon": 35.888914,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 13970067252,
+   "lat": 32.132103,
+   "lon": 35.853731,
+   "limit": null,
+   "limitSource": null,
+   "direction": null,
+   "urban": false,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 13970067280,
+   "lat": 32.021481,
+   "lon": 35.894082,
+   "limit": 80,
+   "limitSource": "camera",
+   "direction": null,
+   "urban": false,
+   "kind": "speed",
+   "name": null
+  },
+  {
+   "id": 13970067281,
+   "lat": 32.014684,
+   "lon": 35.910426,
+   "limit": 80,
+   "limitSource": "camera",
    "direction": null,
    "urban": false,
    "kind": "speed",
