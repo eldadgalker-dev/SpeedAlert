@@ -59,6 +59,7 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         val moving = speedKmh >= MIN_SPEED_KMH
         nearestM = dist.values.minOrNull() ?: Double.MAX_VALUE
         passAt = null
+        var gone: Long? = null
 
         // Forget only with hysteresis, so GPS jitter near the limit cannot re-arm a camera.
         states.keys.retainAll { (dist[it] ?: Double.MAX_VALUE) < FORGET_M }
@@ -71,6 +72,9 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
                 if (away && s.lastDist < PASS_NEAR_M) { s.beeped = true; passAt = id to 0L }
                 else if (!away && eta <= PASS_AHEAD_MS) { s.beeped = true; passAt = id to eta.toLong() }
             }
+            // Moving away from an announced camera that was not reached: the road turned off before it
+            // (user request 2026-11-08): the event ends with "מצלמה לא בהמשך הדרך".
+            if (away && s.announced && !s.beeped && !s.passed) gone = id
             if (away) s.passed = true
             s.closing = d < s.lastDist - 1
             s.lastDist = d
@@ -78,6 +82,8 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
 
         // A red-light camera falls silent once the car stops at the light.
         if (speedKmh < STOP_KMH) for (c in all) if (c.kind == Camera.Kind.RED_LIGHT) states[c.id]?.let { if (it.announced) it.passed = true }
+
+        gone?.let { return Alert(NOT_AHEAD, repeat = false, key = "$KEY$it") }
 
         // A camera already announced keeps talking until it is passed, even when stopped
         // at a light (speed cameras) or when the heading jitters.
@@ -136,6 +142,7 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         const val MIN_SPEED_KMH = 10.0
         const val STOP_KMH = 5.0
         const val OK = "מהירות תקינה."
+        const val NOT_AHEAD = "מצלמה לא בהמשך הדרך."
         const val KEY = "camera-"
         const val PASS_AHEAD_MS = 1500.0   // more than the 1 s between fixes, so the sound is scheduled before the camera
         const val PASS_NEAR_M = 150.0

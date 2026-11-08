@@ -3,4 +3,6 @@
 <paths>
     <!-- Downloaded update APKs: cacheDir/updates -->
     <cache-path name="updates" path="updates/" />
+    <!-- The usage log, handed to the share sheet: filesDir/logs -->
+    <files-path name="logs" path="logs/" />
 </paths>

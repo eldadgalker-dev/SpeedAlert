@@ -13,6 +13,11 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
   once; leaving it while stopped goes to saving without the 3-minute wait.
 - Main screen: battery (estimate from the app's CPU and GPS time) and CPU of this app only, over the
   last minutes (up to 10); dates as dd/mm/yyyy.
+- Usage log on the phone (filesDir/logs/usage-log.csv), kept across starts: every 15 minutes while running,
+  and at start and stop, the app version, battery, CPU share and estimated drain. The "יומן שימוש" button
+  shows totals overall and per version and hands the file to the phone's share sheet; the app sends nothing.
+- Buttons: mode (beeps and sentences / beeps only, saved), reset (service restarted, speech engine reconnected),
+  full shut-down (alerts stopped and the app closed).
 - Every alert opens with three loud, harsh beeps on the alarm stream; a continuous alert then repeats
   without a break, with one beep before every further sentence, the closing "מהירות תקינה" included, until
   the event ends (slowing down, camera passed). A dropped road match does not stop a speeding alert under way,
@@ -21,6 +26,12 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
   any sentence under way. It is timed from the speed so that it plays at the camera's point, not at the next GPS fix.
 - A camera alert silences a speeding alert at once, until the camera is passed.
 - A fine without points is said without "ללא נקודות".
+- An announced camera that is left behind without being reached (the road turned off) closes its event with
+  "מצלמה לא בהמשך הדרך" (one beep).
+- Speeding on a new road goes on with the new road's limit until the speed is at or under it.
+- The speech engine is reconnected when driving starts after 30 minutes without speech, and once when a sentence
+  fails, so that a first alert after days unused is not beeps without words (field report 2026-11-08).
+- The help page shows the last change and the last check of every data set, read from GitHub when it opens.
 - A camera counts only when it is ahead (within 35° of the heading) and not facing across the road.
 - Speed camera: from 500 m before it the alert repeats without a break, with the current
   distance and speed, until the camera is passed (also while stopped near it):

@@ -176,6 +176,28 @@ class CameraWatcherTest {
         assertEquals(1, next(Alert("long gap still same event", repeat = true, key = SpeedingWatcher.KEY)))
     }
 
+    @Test fun cameraNotAheadAfterTurningOff() {
+        val w = watcher(cam)
+        val before = drive(w, 32.0000, 32.0015, 80.0)
+        assertTrue(before.isNotEmpty())                               // announced, about 390 m before it
+        // Turns east onto another road: the camera falls behind to the side.
+        val after = (1..10).mapNotNull { w.onLocation(32.0015, 34.8 + it * 0.0005, 80.0, 90.0) }
+        val end = after.dropWhile { it.repeat }                       // the first step east is within GPS jitter
+        assertEquals(listOf(CameraWatcher.NOT_AHEAD), end.map { it.text })     // once, then quiet
+        assertEquals(CameraWatcher.KEY + cam.id, end[0].key)            // closes the camera event: one beep
+        assertNull(w.passAt)
+    }
+
+    @Test fun speedingFollowsTheNewRoadLimit() {
+        // Two north-south roads: limit 50 at 34.8, limit 80 at 34.81.
+        val roads = Roads.parse("# test\n50 1 3200000 3480000 1000 0\n80 0 3200000 3481000 1000 0\n")
+        val w = SpeedingWatcher(penalties).apply { this.roads = roads }
+        repeat(3) { w.onLocation(32.002, 34.8, 85.0, 0.0) }
+        assertTrue(w.onLocation(32.002, 34.8, 85.0, 0.0)!!.text.contains("מותרת 50. הוֹרֵד 35"))
+        assertTrue(w.onLocation(32.003, 34.81, 85.0, 0.0)!!.text.contains("מותרת 80. הוֹרֵד 5"))   // changed road, still over
+        assertEquals("מהירות תקינה. מותרת 80.", w.onLocation(32.004, 34.81, 79.0, 0.0)!!.text)
+    }
+
     @Test fun speedingUsesTheFasterRoadBesideARamp() {
         // Field report 2026-10-29: a 50 km/h ramp 8 m from the car, the 90 km/h highway 12 m away.
         val roads = Roads.parse(listOf("90 0 3200000 3480000 1000 0", "50 1 3200000 3480015 1000 0",

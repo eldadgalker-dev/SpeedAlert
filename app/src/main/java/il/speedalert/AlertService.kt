@@ -60,7 +60,33 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private val beeps = EventBeeps()
     @Volatile private var talkingUntil = 0L          // own record of the sentence under way (onDone clears it)
     @Volatile private var talkingId: String? = null
-    private fun ended(id: String?) { if (id == talkingId) talkingUntil = 0 }
+    private fun ended(id: String?) { if (id == talkingId) { talkingUntil = 0; retried = false } }
+    private var talkingText: String? = null
+    private var retried = false                      // one reconnect of the speech engine per sentence
+    private var ttsAt = 0L                           // engine (re)connected
+    private var spokeAt = 0L                         // last sentence handed to the engine
+
+    /**
+     * Field report 2026-11-08: after some days unused the first alert gave the beeps without the
+     * words; the speech engine's connection had gone stale. The engine is connected anew when
+     * driving starts after a long pause, and when a sentence fails (once), then says it.
+     */
+    private fun connectTts() {
+        ttsReady = false
+        if (::tts.isInitialized) runCatching { tts.shutdown() }
+        ttsAt = System.currentTimeMillis()
+        lateinit var t: TextToSpeech
+        t = TextToSpeech(this) { r -> main.post { if (tts === t) onInit(r) } }
+        tts = t
+    }
+
+    private fun failed(text: String?) {
+        if (text == null || retried) { talkingUntil = 0; return }
+        retried = true
+        pending = text
+        talkingUntil = System.currentTimeMillis() + MAX_TALK_MS   // quiet while reconnecting
+        connectTts()
+    }
     private var tone: ToneGenerator? = null
     private lateinit var tts: TextToSpeech
     private lateinit var audio: AudioManager
@@ -95,7 +121,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         average = AverageSpeedWatcher(runCatching { Database.sections(this) }.getOrDefault(emptyList()))
         roadTiles = RoadTiles(this)
         speeding.roads = roadTiles
-        tts = TextToSpeech(this, this)
+        beepsOnly = getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(K_BEEPS_ONLY, false)
+        connectTts()
         startInForeground()
         running = true
         startedAt = System.currentTimeMillis()
@@ -105,6 +132,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         startActivityRecognition()
         instance = this
         main.post(dataCheck)
+        UsageLog.event(this, "start", gpsMs(), savingMs())
+        main.postDelayed(logTick, UsageLog.INTERVAL_MS)
     }
 
     private val activityIntent by lazy {
@@ -137,6 +166,14 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private val main = Handler(Looper.getMainLooper())
 
     /** Checks GitHub for newer camera data now and every [DataUpdate.INTERVAL_MS] while running. */
+    /** One line in the usage log every [UsageLog.INTERVAL_MS] (user request 2026-11-08). */
+    private val logTick = object : Runnable {
+        override fun run() {
+            UsageLog.sample(this@AlertService, gpsMs(), savingMs(), motionSensor, if (saving) "saving" else "active")
+            main.postDelayed(this, UsageLog.INTERVAL_MS)
+        }
+    }
+
     private val dataCheck = object : Runnable {
         override fun run() {
             Thread {
@@ -170,6 +207,9 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     override fun onDestroy() {
         instance = null
         main.removeCallbacks(dataCheck)
+        main.removeCallbacks(logTick)
+        UsageLog.sample(this, gpsMs(), savingMs(), motionSensor, if (saving) "saving" else "active")
+        UsageLog.event(this, "stop", gpsMs(), savingMs())
         if (recognition) runCatching { ActivityRecognition.getClient(this).removeActivityTransitionUpdates(activityIntent) }
         fused.removeLocationUpdates(callback)
         motion?.let { sensors.cancelTriggerSensor(trigger, it) }
@@ -200,8 +240,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
             override fun onStart(id: String?) {}
             override fun onDone(id: String?) = ended(id)
-            @Deprecated("API 21") override fun onError(id: String?) = ended(id)
-            override fun onError(id: String?, code: Int) = ended(id)
+            @Deprecated("API 21") override fun onError(id: String?) { main.post { if (id == talkingId) failed(talkingText) } }
+            override fun onError(id: String?, code: Int) { main.post { if (id == talkingId) failed(talkingText) } }
             override fun onStop(id: String?, interrupted: Boolean) = ended(id)
         })
         ttsReady = true
@@ -263,7 +303,10 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         tone?.let { runCatching { it.release() } }
         tone = t
         for (i in 0 until beeps) HandlerCompat.postDelayed(main, { t?.startTone(ToneGenerator.TONE_CDMA_HIGH_L, BEEP_MS) }, VOICE, i * BEEP_GAP_MS)
-        HandlerCompat.postDelayed(main, { runCatching { t?.release() }; if (tone === t) tone = null; speak(text) }, VOICE, beeps * BEEP_GAP_MS)
+        // Beeps only (switch on the main screen, user request 2026-11-08): no sentence, a pause instead.
+        if (beepsOnly) beepsUntil += BEEPS_ONLY_PAUSE_MS
+        HandlerCompat.postDelayed(main, { runCatching { t?.release() }; if (tone === t) tone = null; if (!beepsOnly) speak(text) },
+            VOICE, beeps * BEEP_GAP_MS)
     }
 
     /** Stops the beeps and the sentence under way. */
@@ -315,9 +358,11 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         maximise()
         val id = "alert-${System.currentTimeMillis()}"
         talkingId = id
-        talkingUntil = System.currentTimeMillis() + MAX_TALK_MS
+        talkingText = text
+        spokeAt = System.currentTimeMillis()
+        talkingUntil = spokeAt + MAX_TALK_MS
         val params = Bundle().apply { putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_ALARM) }
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, id)
+        if (tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, id) != TextToSpeech.SUCCESS) failed(text)
     }
 
     private fun maximise() {
@@ -409,6 +454,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private fun wake() {
         lastDriving = System.currentTimeMillis()
         wokeByMotion = true
+        if (ttsReady && lastDriving - maxOf(ttsAt, spokeAt) > STALE_TTS_MS) connectTts()
         fast = true
         requestLocation(saving = false)
         status = "ממתין לתנועה"
@@ -460,6 +506,23 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         const val ACTION_TEST = "il.speedalert.TEST"
         private const val PASS_MS = 1500
         private const val MAX_TALK_MS = 20_000L
+        private const val STALE_TTS_MS = 30 * 60_000L
+        private const val BEEPS_ONLY_PAUSE_MS = 4000L
+        const val PREFS = "settings"
+        const val K_BEEPS_ONLY = "beeps_only"
+        /** Beeps without the sentence (switch on the main screen). */
+        @Volatile var beepsOnly = false
+
+        fun setBeepsOnly(ctx: Context, on: Boolean) {
+            beepsOnly = on
+            ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(K_BEEPS_ONLY, on).apply()
+        }
+
+        /** Reset: the service stopped and started again, all state and the speech engine fresh. */
+        fun restart(ctx: Context) {
+            stop(ctx)
+            Handler(Looper.getMainLooper()).postDelayed({ start(ctx) }, 800)
+        }
         private val SPEED_KEYS = setOf(SpeedingWatcher.KEY, AverageSpeedWatcher.KEY)
         private val VOICE = Any()   // token of the beeps and the sentence, for cancelVoice()
         private val PASS = Any()

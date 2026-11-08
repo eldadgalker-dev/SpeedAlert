@@ -36,6 +36,7 @@ class MainActivity : Activity() {
     private lateinit var alertView: TextView
     private lateinit var alertCard: LinearLayout
     private lateinit var toggle: Button
+    private lateinit var modeButton: Button
     private lateinit var updateView: TextView
     private val info = mutableMapOf<String, TextView>()
     private val notes = mutableMapOf<String, TextView>()
@@ -54,6 +55,7 @@ class MainActivity : Activity() {
     private fun px(v: Int) = (v * dp).toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        AlertService.beepsOnly = getSharedPreferences(AlertService.PREFS, MODE_PRIVATE).getBoolean(AlertService.K_BEEPS_ONLY, false)
         super.onCreate(savedInstanceState)
         val dark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         pal = if (dark) Palette(0xFF121212.toInt(), 0xFF1E1E1E.toInt(), 0xFFECECEC.toInt(), 0xFFA0A0A0.toInt(), 0xFF333333.toInt())
@@ -127,6 +129,23 @@ class MainActivity : Activity() {
             addView(button(getString(R.string.check_update), pal.card, pal.text, 15f) { checkAppUpdate() },
                 LinearLayout.LayoutParams(0, px(52), 1f))
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(10) })
+        // Beeps only / beeps and sentence, reset, full shut-down (user request 2026-11-08).
+        modeButton = button("", pal.card, pal.text, 15f) {
+            AlertService.setBeepsOnly(this, !AlertService.beepsOnly); render()
+        }
+        body.addView(modeButton, LinearLayout.LayoutParams(-1, px(52)).apply { topMargin = px(10) })
+        body.addView(LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            addView(button("איפוס", pal.card, pal.text, 15f) {
+                withPermissions { AlertService.restart(this@MainActivity) }
+            }, LinearLayout.LayoutParams(0, px(52), 1f).apply { marginEnd = px(8) })
+            addView(button("כיבוי מלא", pal.card, RED, 15f) {
+                AlertService.stop(this@MainActivity)
+                finishAndRemoveTask()
+            }, LinearLayout.LayoutParams(0, px(52), 1f))
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(10) })
+        body.addView(button("יומן שימוש: מעבד וסוללה", pal.card, pal.text, 15f) { showUsageLog() },
+            LinearLayout.LayoutParams(-1, px(52)).apply { topMargin = px(10) })
         body.addView(button(getString(R.string.help_page), pal.card, pal.text, 15f) {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(HELP_URL)))
         }, LinearLayout.LayoutParams(-1, px(52)).apply { topMargin = px(10) })
@@ -183,6 +202,7 @@ class MainActivity : Activity() {
         alertCard.visibility = if (AlertService.lastAlert.isEmpty()) View.GONE else View.VISIBLE
         toggle.text = getString(if (running) R.string.stop else R.string.start)
         toggle.background = round(if (running) RED else GREEN, 14)
+        modeButton.text = if (AlertService.beepsOnly) "מצב: צפצופים בלבד (החלף להודעות)" else "מצב: צפצופים והודעות (החלף לצפצופים בלבד)"
         updateView.text = updateText
         updateView.visibility = if (updateText.isEmpty()) View.GONE else View.VISIBLE
 
@@ -300,6 +320,37 @@ class MainActivity : Activity() {
     }
 
     private var updateDialog: AlertDialog? = null
+
+    /**
+     * The usage log kept on the phone (user request 2026-11-08). The app sends nothing itself:
+     * "שלח" opens the phone's own share sheet (mail, WhatsApp, Drive) with the file.
+     */
+    private fun showUsageLog() {
+        val view = TextView(this).apply {
+            text = UsageLog.report(this@MainActivity)
+            textSize = 12f; setTextIsSelectable(true); setPadding(px(16), px(8), px(16), px(8))
+        }
+        AlertDialog.Builder(this)
+            .setTitle("יומן שימוש")
+            .setView(ScrollView(this).apply { addView(view) })
+            .setPositiveButton("שלח") { _, _ -> shareUsageLog() }
+            .setNegativeButton("סגור", null)
+            .show()
+    }
+
+    private fun shareUsageLog() {
+        val f = UsageLog.file(this)
+        if (!f.exists()) return
+        val uri = androidx.core.content.FileProvider.getUriForFile(this, "$packageName.fileprovider", f)
+        val send = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            putExtra(Intent.EXTRA_SUBJECT, "SpeedAlert usage log ${BuildConfig.VERSION_NAME}")
+            putExtra(Intent.EXTRA_TEXT, UsageLog.report(this@MainActivity, tail = 0))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(send, "שליחת יומן השימוש"))
+    }
 
     private fun offerUpdate(r: RemoteVersion) {
         if (isFinishing || isDestroyed || updating || updateDialog?.isShowing == true) return

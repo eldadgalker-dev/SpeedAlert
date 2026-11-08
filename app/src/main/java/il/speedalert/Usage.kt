@@ -61,13 +61,16 @@ object Usage {
         if (ms < 60_000) return null
         val cores = Runtime.getRuntime().availableProcessors().coerceAtLeast(1)
         val cpu = (now.cpu - first.cpu).toDouble()
-        val mAh = (cpu * CPU_MA + (now.gps - first.gps) * GPS_MA +
-            (now.saving - first.saving) * (if (cheapSaving) 0.0 else SAVING_MA)) / 3_600_000.0
+        val mAh = estimateMah(cpu, (now.gps - first.gps).toDouble(), (now.saving - first.saving).toDouble(), cheapSaving)
         return Recent((ms / 60_000).toInt(), 100.0 * cpu / ms / cores, 100.0 * mAh / capacityMah(ctx) / (ms / 3_600_000.0))
     }
 
     /** Battery capacity from the charge counter and the level; [DEFAULT_MAH] when the phone does not report it. */
-    private fun capacityMah(ctx: Context): Double {
+    /** Estimated charge used by the app, mAh, from its CPU time and location time, ms. */
+    fun estimateMah(cpuMs: Double, gpsMs: Double, savingMs: Double, cheapSaving: Boolean) =
+        (cpuMs * CPU_MA + gpsMs * GPS_MA + savingMs * (if (cheapSaving) 0.0 else SAVING_MA)) / 3_600_000.0
+
+    fun capacityMah(ctx: Context): Double {
         val bm = ctx.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
         val uAh = bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
         val level = batteryLevel(ctx)
