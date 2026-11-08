@@ -39,6 +39,8 @@ object Http {
  */
 object DataUpdate {
     const val INTERVAL_MS = 30 * 60_000L
+    /** Time of the last successful check (shown in the data table of the main screen). */
+    const val CHECKED_AT = "data_checked_at"
 
     /**
      * Downloads the tables, keeps them only when they parse; says what changed. For the roads
@@ -62,6 +64,8 @@ object DataUpdate {
             save(ctx, RoadTiles.INDEX, index)
             roadsChanged = true
         }
+        ctx.getSharedPreferences(AlertService.PREFS, Context.MODE_PRIVATE).edit()
+            .putLong(CHECKED_AT, System.currentTimeMillis()).apply()
         return Changed(changed, roadsChanged)
     }
 

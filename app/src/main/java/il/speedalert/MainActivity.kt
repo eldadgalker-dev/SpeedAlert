@@ -21,6 +21,23 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import android.widget.Button
+import android.widget.EditText
+import android.widget.ImageView
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.location.Location
+import android.provider.MediaStore
+import android.text.InputType
+import androidx.core.content.FileProvider
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -57,6 +74,7 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         AlertService.beepsOnly = getSharedPreferences(AlertService.PREFS, MODE_PRIVATE).getBoolean(AlertService.K_BEEPS_ONLY, false)
         super.onCreate(savedInstanceState)
+        savedInstanceState?.getString(K_SIGN_PHOTO)?.let { signPhoto = File(it) }   // the camera may have closed the app
         val dark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         pal = if (dark) Palette(0xFF121212.toInt(), 0xFF1E1E1E.toInt(), 0xFFECECEC.toInt(), 0xFFA0A0A0.toInt(), 0xFF333333.toInt())
               else Palette(0xFFF2F2F5.toInt(), Color.WHITE, 0xFF1D1D1F.toInt(), 0xFF5F6368.toInt(), 0xFFE0E0E0.toInt())
@@ -120,6 +138,13 @@ class MainActivity : Activity() {
         toggle = button("", GREEN, Color.WHITE, 20f) { onToggle() }
         body.addView(toggle, LinearLayout.LayoutParams(-1, px(64)).apply { topMargin = px(4) })
 
+        // Speed-sign photo with the exact location, to check corrections to the database (user request 2026-11-08).
+        body.addView(button("צילום שלט מהירות", BLUE, Color.WHITE, 20f) { startSignPhoto() },
+            LinearLayout.LayoutParams(-1, px(64)).apply { topMargin = px(10) })
+        body.addView(text(12f, pal.muted, "לצלם רק בעצירה או על ידי נוסע. המספר נקרא מהתמונה בטלפון עצמו ונשמר ביומן השלטים.").apply {
+            gravity = Gravity.CENTER; setPadding(0, px(4), 0, 0)
+        })
+
         // Secondary actions
         body.addView(LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -146,6 +171,8 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(10) })
         body.addView(button("יומן שימוש: מעבד וסוללה", pal.card, pal.text, 15f) { showUsageLog() },
             LinearLayout.LayoutParams(-1, px(52)).apply { topMargin = px(10) })
+        body.addView(button("יומן שלטי מהירות", pal.card, pal.text, 15f) { showSignLog() },
+            LinearLayout.LayoutParams(-1, px(52)).apply { topMargin = px(10) })
         body.addView(button(getString(R.string.help_page), pal.card, pal.text, 15f) {
             startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(HELP_URL)))
         }, LinearLayout.LayoutParams(-1, px(52)).apply { topMargin = px(10) })
@@ -158,6 +185,14 @@ class MainActivity : Activity() {
                 setTypeface(typeface, Typeface.BOLD); setPadding(0, 0, 0, px(6))
             })
             for (key in listOf(K_BATTERY, K_DRAIN, K_MEMORY, K_CPU, K_UPTIME, K_DATA, K_VERSION)) addView(row(key))
+        })
+        // Data update table (user request 2026-11-08): when each table last changed on this phone.
+        body.addView(card().apply {
+            addView(text(13f, pal.muted, "עדכון מאגרי המידע בטלפון").apply {
+                setTypeface(typeface, Typeface.BOLD); setPadding(0, 0, 0, px(6))
+            })
+            for (key in DATA_ROWS.keys) addView(row(key))
+            addView(row(K_CHECKED))
         })
         // Copyright and data credits, one item per line, centred (user requests 2026-10-29);
         // each line keeps the direction of its language so bidi cannot reorder it.
@@ -223,8 +258,154 @@ class MainActivity : Activity() {
         show(K_UPTIME, if (running) minutes(System.currentTimeMillis() - AlertService.startedAt) else "–")
         show(K_DATA, AlertService.dataInfo.ifEmpty { "בודק…" }, AlertService.dataNote)
         val newer = AppUpdate.available
+        if (renders % 10 == 1) showDataDates()
         show(K_VERSION, "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
             if (newer == null) "" else "גרסה ${newer.versionName} זמינה: לחץ \"בדוק עדכון\"")
+    }
+
+    private fun date(ms: Long) = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.ROOT).format(Date(ms))
+
+    /** Last change of each table on the phone (the time it was saved), else the copy packed in the app. */
+    private fun showDataDates() {
+        for ((key, name) in DATA_ROWS) {
+            val f = File(filesDir, name)
+            if (f.exists()) show(key, date(f.lastModified()), "הורד מהשרת")
+            else show(key, "בגרסת האפליקציה", "עדיין לא הורד עדכון")
+        }
+        val at = getSharedPreferences(AlertService.PREFS, MODE_PRIVATE).getLong(DataUpdate.CHECKED_AT, 0)
+        show(K_CHECKED, if (at == 0L) "עדיין לא" else date(at),
+            "קטעי מהירות ממוצעת ונתיבי תחבורה ציבורית מתעדכנים ידנית; השאר אוטומטית. מועדי השרת: דף ההסבר")
+    }
+
+    // ---- speed-sign photos (user request 2026-11-08) ----
+
+    override fun onSaveInstanceState(out: Bundle) {
+        super.onSaveInstanceState(out)
+        signPhoto?.let { out.putString(K_SIGN_PHOTO, it.path) }
+    }
+
+    private var signPhoto: File? = null
+    private var signFix: Location? = null
+    private var signRoads: RoadTiles? = null
+    private val fused by lazy { LocationServices.getFusedLocationProviderClient(this) }
+    private val signFixes = object : LocationCallback() {
+        override fun onLocationResult(r: LocationResult) { r.lastLocation?.let { signFix = it } }
+    }
+
+    /** Opens the phone's camera; the location is followed at full accuracy until the photo comes back. */
+    private fun startSignPhoto() = withPermissions {
+        val f = SignLog.newPhoto(this)
+        signPhoto = f; signFix = null
+        signRoads = RoadTiles(this)
+        runCatching {
+            fused.requestLocationUpdates(LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000).build(),
+                signFixes, Looper.getMainLooper())
+            fused.lastLocation.addOnSuccessListener { l ->
+                if (signFix == null && l != null && System.currentTimeMillis() - l.time < 30_000) signFix = l
+            }
+        }
+        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", f)
+        val shoot = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, uri)
+            clipData = ClipData.newRawUri("", uri)
+            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        try {
+            @Suppress("DEPRECATION") startActivityForResult(shoot, REQ_SIGN)
+        } catch (e: ActivityNotFoundException) {
+            fused.removeLocationUpdates(signFixes)
+            AlertDialog.Builder(this).setMessage("לא נמצאה אפליקציית מצלמה בטלפון.").setPositiveButton("סגור", null).show()
+        }
+    }
+
+    @Deprecated("Activity API")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION") super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != REQ_SIGN) return
+        val fix = signFix
+        runCatching { fused.removeLocationUpdates(signFixes) }
+        val photo = signPhoto ?: return
+        if (resultCode != RESULT_OK || !photo.exists() || photo.length() == 0L) { photo.delete(); return }
+        val roads = signRoads ?: RoadTiles(this)
+        Thread {
+            val small = runCatching { SignLog.prepare(photo) }.getOrNull()
+            val read = small?.let { runCatching { SignLog.readNumber(it) }.getOrNull() }
+            val limits = if (fix == null || roads == null) emptyList() else dbLimits(roads, fix)
+            ui.post { confirmSign(photo, small, read, fix, limits) }
+        }.start()
+    }
+
+    /** Road table limits at the photo's place: along the direction of travel, else in any direction. */
+    private fun dbLimits(roads: RoadTiles, fix: Location): List<Int> {
+        val headings = if (fix.hasBearing() && fix.hasSpeed() && fix.speed > 2) listOf(fix.bearing.toDouble())
+                       else listOf(0.0, 90.0, 180.0, 270.0)
+        repeat(30) {   // the tile may still be downloading (up to about 3 s)
+            val found = headings.mapNotNull { roads.at(fix.latitude, fix.longitude, it)?.limit }.distinct()
+            if (found.isNotEmpty()) return found
+            Thread.sleep(100)
+        }
+        return emptyList()
+    }
+
+    private fun confirmSign(photo: File, small: android.graphics.Bitmap?, read: Int?, fix: Location?, limits: List<Int>) {
+        if (isFinishing || isDestroyed) return
+        val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(px(20), px(8), px(20), 0) }
+        small?.let { box.addView(ImageView(this).apply { setImageBitmap(it); adjustViewBounds = true },
+            LinearLayout.LayoutParams(-1, px(220))) }
+        val where = if (fix == null) "אין מיקום: התמונה תישמר בלי מיקום מדויק."
+                    else "מיקום: דיוק ${fix.accuracy.toInt()} מטר" + (if (fix.hasBearing()) ", כיוון ${fix.bearing.toInt()}°" else "")
+        val db = if (limits.isEmpty()) "במאגר: לא ידוע" else "במאגר: ${limits.joinToString(" / ")}"
+        val got = if (read == null) "לא זוהה מספר בתמונה: הקלד את המספר שעל השלט." else "זוהה בתמונה: $read"
+        box.addView(text(15f, pal.text, "$got\n$db\n$where").apply { setPadding(0, px(8), 0, px(8)) })
+        val input = EditText(this).apply {
+            inputType = InputType.TYPE_CLASS_NUMBER; hint = "המהירות שעל השלט"
+            setText(read?.toString() ?: ""); textSize = 22f
+        }
+        box.addView(input)
+        AlertDialog.Builder(this)
+            .setTitle("שלט מהירות")
+            .setView(ScrollView(this).apply { addView(box) })
+            .setPositiveButton("שמור") { _, _ ->
+                val v = input.text.toString().toIntOrNull()
+                if (v == null || v !in 5..130) { photo.delete(); return@setPositiveButton }
+                SignLog.add(this, SignLog.Entry(fix?.latitude ?: 0.0, fix?.longitude ?: 0.0, fix?.accuracy ?: -1f,
+                    fix?.takeIf { it.hasBearing() }?.bearing, fix?.let { (System.currentTimeMillis() - it.time) / 1000 } ?: -1,
+                    read, v, limits, photo.name))
+            }
+            .setNegativeButton("בטל") { _, _ -> photo.delete() }
+            .setOnCancelListener { photo.delete() }
+            .show()
+    }
+
+    /** The sign log; "שלח" hands the table and the photos to the phone's share sheet. */
+    private fun showSignLog() {
+        val view = TextView(this).apply {
+            text = SignLog.report(this@MainActivity)
+            textSize = 12f; setTextIsSelectable(true); setPadding(px(16), px(8), px(16), px(8))
+        }
+        AlertDialog.Builder(this)
+            .setTitle("יומן שלטי מהירות")
+            .setView(ScrollView(this).apply { addView(view) })
+            .setPositiveButton("שלח") { _, _ -> shareSignLog() }
+            .setNegativeButton("סגור", null)
+            .show()
+    }
+
+    private fun shareSignLog() {
+        val log = SignLog.file(this)
+        if (!log.exists()) return
+        val uris = ArrayList<Uri>()
+        (listOf(log) + SignLog.photos(this).takeLast(MAX_SHARED_PHOTOS)).forEach {
+            uris += FileProvider.getUriForFile(this, "$packageName.fileprovider", it)
+        }
+        val send = Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+            type = "*/*"
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+            putExtra(Intent.EXTRA_SUBJECT, "SpeedAlert speed signs ${BuildConfig.VERSION_NAME}")
+            putExtra(Intent.EXTRA_TEXT, SignLog.report(this@MainActivity))
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(send, "שליחת יומן השלטים"))
     }
 
     private fun minutes(ms: Long): String {
@@ -436,6 +617,18 @@ class MainActivity : Activity() {
         private const val RED = 0xFFC62828.toInt()
         private const val GREEN = 0xFF2E7D32.toInt()
         private const val GREY = 0xFF757575.toInt()
+        private const val BLUE = 0xFF1565C0.toInt()
+        private const val REQ_SIGN = 7
+        private const val K_SIGN_PHOTO = "sign_photo"
+        private const val MAX_SHARED_PHOTOS = 50
+        private val DATA_ROWS = linkedMapOf(
+            "מצלמות" to Database.CAMERAS,
+            "מהירות בכבישים" to RoadTiles.INDEX,
+            "קנסות ונקודות" to Database.PENALTIES,
+            "נתיבי תחבורה ציבורית" to Database.BUS_LANES,
+            "קטעי מהירות ממוצעת" to Database.SECTIONS,
+        )
+        private const val K_CHECKED = "בדיקה אחרונה מול השרת"
         private const val K_BATTERY = "סוללה"
         private const val K_DRAIN = "סוללה (האפליקציה)"
         private const val K_MEMORY = "זיכרון האפליקציה"

@@ -16,6 +16,14 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 - Usage log on the phone (filesDir/logs/usage-log.csv), kept across starts: every 15 minutes while running,
   and at start and stop, the app version, battery, CPU share and estimated drain. The "יומן שימוש" button
   shows totals overall and per version and hands the file to the phone's share sheet; the app sends nothing.
+- Speed-sign photos: the "צילום שלט מהירות" button opens the phone's camera (no CAMERA permission, the
+  camera app writes the photo through the FileProvider) while the location is followed at full accuracy.
+  The number is read on the phone (SignReader.kt: red ring by colour, digits against a 5x7 font, only legal
+  limits; no ML Kit, no network); the user confirms or corrects it. Each sign goes to filesDir/signs/signs-log.csv
+  with time, version, position, accuracy, bearing, the number read, the number confirmed, the road-table limit
+  there and whether they differ; the photo (upright, up to 1600 px) is kept next to it. "יומן שלטי מהירות"
+  shows the log and hands the CSV and the latest 50 photos to the share sheet, to check corrections to the data.
+- Data table on the main screen: when each data file last changed on the phone, and the last successful check.
 - Buttons: mode (beeps and sentences / beeps only, saved), reset (service restarted, speech engine reconnected),
   full shut-down (alerts stopped and the app closed).
 - Every alert opens with three loud, harsh beeps on the alarm stream; a continuous alert then repeats
