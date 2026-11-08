@@ -57,8 +57,10 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private val once = ArrayDeque<Alert>()           // one-time alerts waiting for the voice
     private var beepsUntil = 0L                      // the voice waits for the beeps to end
     private var speakingKey: String? = null          // event of the announcement being beeped or spoken
-    private var repeatKey: String? = null            // repeating event already opened with three beeps
-    private var repeatSeen = 0L                      // last fix with a repeating alert
+    private val beeps = EventBeeps()
+    @Volatile private var talkingUntil = 0L          // own record of the sentence under way (onDone clears it)
+    @Volatile private var talkingId: String? = null
+    private fun ended(id: String?) { if (id == talkingId) talkingUntil = 0 }
     private var tone: ToneGenerator? = null
     private lateinit var tts: TextToSpeech
     private lateinit var audio: AudioManager
@@ -193,6 +195,15 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         }
         // Alarm stream: plays at its own volume even when the ringer is silent or on vibrate.
         tts.setAudioAttributes(ALERT_AUDIO)
+        // isSpeaking is not reliable on every engine (false for a moment after speak(), or stuck):
+        // the end of each sentence is taken from the engine's own callbacks, with [MAX_TALK_MS] as a cap.
+        tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+            override fun onStart(id: String?) {}
+            override fun onDone(id: String?) = ended(id)
+            @Deprecated("API 21") override fun onError(id: String?) = ended(id)
+            override fun onError(id: String?, code: Int) = ended(id)
+            override fun onStop(id: String?, interrupted: Boolean) = ended(id)
+        })
         ttsReady = true
         pending?.let { speak(it); pending = null }
     }
@@ -224,14 +235,13 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         if (wantFast != fast) { fast = wantFast; requestLocation(saving = false) }
         val repeating = alerts.firstOrNull { it.repeat }
         val now = System.currentTimeMillis()
-        if (repeating != null) repeatSeen = now
-        else if (now - repeatSeen > EVENT_GAP_MS) repeatKey = null   // the event ended
+        beeps.tick(once.map { it.key } + repeating?.key + speakingKey, now)
         // A camera silences the speed messages at once, until it is passed (user request 2026-11-02).
         if (camera?.repeat == true && speakingKey in SPEED_KEYS) {
             cancelVoice()
             once.removeAll { it.key == SpeedingWatcher.KEY }
         }
-        if ((ttsReady && tts.isSpeaking) || now < beepsUntil) return
+        if (now < talkingUntil || now < beepsUntil) return
         // Continuous: the next sentence (with fresh distance and speed) starts as soon as the last ends.
         val next = once.removeFirstOrNull() ?: repeating
         if (next == null) {
@@ -240,29 +250,28 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
             return
         }
         lastAlert = next.text
-        // Three beeps open every event, one beep between its repeats (user request 2026-11-02).
-        val beeps = if (next.repeat && next.key != null && next.key == repeatKey) 1 else BEEPS
-        if (next.repeat) repeatKey = next.key
+        // Three beeps open every event, one beep before each further sentence of it (user requests 2026-11-02, 2026-11-08).
         speakingKey = next.key
-        beepThenSpeak(next.text, beeps)
+        beepThenSpeak(next.text, beeps.forNext(next, now))
     }
 
     /** Loud, harsh beeps on the alarm stream (user request 2026-10-28), then the sentence. */
-    private fun beepThenSpeak(text: String, beeps: Int = BEEPS) {
+    private fun beepThenSpeak(text: String, beeps: Int = EventBeeps.FIRST) {
         maximise()
         beepsUntil = System.currentTimeMillis() + beeps * BEEP_GAP_MS
         val t = runCatching { ToneGenerator(AudioManager.STREAM_ALARM, ToneGenerator.MAX_VOLUME) }.getOrNull()
-        tone?.release()
+        tone?.let { runCatching { it.release() } }
         tone = t
         for (i in 0 until beeps) HandlerCompat.postDelayed(main, { t?.startTone(ToneGenerator.TONE_CDMA_HIGH_L, BEEP_MS) }, VOICE, i * BEEP_GAP_MS)
-        HandlerCompat.postDelayed(main, { t?.release(); if (tone === t) tone = null; speak(text) }, VOICE, beeps * BEEP_GAP_MS)
+        HandlerCompat.postDelayed(main, { runCatching { t?.release() }; if (tone === t) tone = null; speak(text) }, VOICE, beeps * BEEP_GAP_MS)
     }
 
     /** Stops the beeps and the sentence under way. */
     private fun cancelVoice() {
         main.removeCallbacksAndMessages(VOICE)
-        tone?.release(); tone = null
+        tone?.let { runCatching { it.release() } }; tone = null
         if (ttsReady) tts.stop()
+        talkingUntil = 0
         pending = null
         beepsUntil = 0
         speakingKey = null
@@ -304,8 +313,11 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private fun speak(text: String) {
         if (!ttsReady) { pending = text; return }
         maximise()
+        val id = "alert-${System.currentTimeMillis()}"
+        talkingId = id
+        talkingUntil = System.currentTimeMillis() + MAX_TALK_MS
         val params = Bundle().apply { putInt(TextToSpeech.Engine.KEY_PARAM_STREAM, AudioManager.STREAM_ALARM) }
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, "alert-${System.currentTimeMillis()}")
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, id)
     }
 
     private fun maximise() {
@@ -446,9 +458,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         const val CHANNEL = "camera-alerts"
         private const val UPDATES = "app-updates"
         const val ACTION_TEST = "il.speedalert.TEST"
-        private const val BEEPS = 3
         private const val PASS_MS = 1500
-        private const val EVENT_GAP_MS = 3000L
+        private const val MAX_TALK_MS = 20_000L
         private val SPEED_KEYS = setOf(SpeedingWatcher.KEY, AverageSpeedWatcher.KEY)
         private val VOICE = Any()   // token of the beeps and the sentence, for cancelVoice()
         private val PASS = Any()

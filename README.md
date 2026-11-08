@@ -14,7 +14,9 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 - Main screen: battery (estimate from the app's CPU and GPS time) and CPU of this app only, over the
   last minutes (up to 10); dates as dd/mm/yyyy.
 - Every alert opens with three loud, harsh beeps on the alarm stream; a continuous alert then repeats
-  without a break, with one beep between the sentences, until the event ends (slowing down, camera passed).
+  without a break, with one beep before every further sentence, the closing "מהירות תקינה" included, until
+  the event ends (slowing down, camera passed). A dropped road match does not stop a speeding alert under way,
+  and the excess is counted from the speed as spoken ("נוכחית 90. מותרת 90." is "מהירות תקינה").
 - At the camera itself: a long two-tone sound, different from the beeps and louder to the ear; it cuts off
   any sentence under way. It is timed from the speed so that it plays at the camera's point, not at the next GPS fix.
 - A camera alert silences a speeding alert at once, until the camera is passed.

@@ -49,7 +49,7 @@ class AverageSpeedWatcher(@Volatile var sections: List<AverageSection>) {
         if (seconds < MIN_SECONDS || average <= s.limit) {
             if (!t.owed) return null
             t.owed = false
-            return Alert("מהירות ממוצעת תקינה. מותרת ${s.limit}.", repeat = false)
+            return Alert("מהירות ממוצעת תקינה. מותרת ${s.limit}.", repeat = false, key = KEY)
         }
         t.owed = true
         // Speed for the rest of the section that ends it exactly at the limit.

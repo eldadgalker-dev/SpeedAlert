@@ -1,7 +1,6 @@
 // Copyright (c) 1986-2026 Eldad Galker, eldad@galker.com, https://www.galker.com/software/
 package il.speedalert
 
-import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
@@ -120,9 +119,10 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
             val ok = cam.limit?.let { speedKmh <= it } == true
             return "מצלמת רמזור בעוד $metres מטר." + if (ok) " $OK" else ""
         }
-        val head = "מצלמת מהירות בעוד $metres מטר. מהירות נוכחית ${speedKmh.roundToInt()}."
+        val shown = speedKmh.roundToInt()
+        val head = "מצלמת מהירות בעוד $metres מטר. מהירות נוכחית $shown."
         val limit = cam.limit ?: return head
-        val over = ceil(speedKmh - limit).toInt()
+        val over = shown - limit   // from the speed as spoken (field report 2026-11-08)
         if (over <= 0) return "$head מותרת $limit. $OK"
         return "$head מותרת $limit. ${penalties.spoken(over, cam.urban)}"
     }

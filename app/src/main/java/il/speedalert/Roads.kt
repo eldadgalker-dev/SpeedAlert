@@ -141,25 +141,35 @@ class SpeedingWatcher(@Volatile var penalties: Penalties) {
     @Volatile var roads: RoadLookup? = null
     private var streak = 0
     private var owed = false   // an alert was given; repeat it until back at or under the limit, then say so once
+    private var last: Roads.Match? = null   // road of the last alert
+    private var misses = 0
 
     fun onLocation(lat: Double, lon: Double, speedKmh: Double, heading: Double?): Alert? {
         val r = roads
-        val m = (if (r == null || heading == null) null else r.at(lat, lon, heading)) ?: run { streak = 0; return null }
-        val over = kotlin.math.ceil(speedKmh - m.limit).toInt()
+        val found = if (r == null || heading == null) null else r.at(lat, lon, heading)
+        // Field report 2026-11-08 (silence after the first alert until back under the limit): the
+        // road match drops out on single fixes (heading jitter, a ramp with an unknown limit beside
+        // the road); while an alert is owed the road of the last alert goes on for [HOLD_FIXES].
+        val m = found ?: last?.takeIf { owed && ++misses <= HOLD_FIXES } ?: run { streak = 0; return null }
+        if (found != null) { last = found; misses = 0 }
+        // From the speed as spoken, so that "נוכחית 90. מותרת 90." never comes with "הוֹרֵד 1" or "הוֹרֵד 0".
+        val shown = speedKmh.roundToInt()
+        val over = shown - m.limit
         if (owed) {
-            if (over <= 0) { owed = false; streak = 0; return Alert("${CameraWatcher.OK} מותרת ${m.limit}.", repeat = false, key = KEY) }
+            if (over <= 0) { owed = false; streak = 0; last = null; return Alert("${CameraWatcher.OK} מותרת ${m.limit}.", repeat = false, key = KEY) }
         } else {
             if (over < OVER_KMH) { streak = 0; return null }
             if (++streak < CONFIRM) return null
             owed = true
         }
-        return Alert("חריגת מהירות. מהירות נוכחית ${speedKmh.roundToInt()}. מותרת ${m.limit}. ${penalties.spoken(over, m.urban)}",
+        return Alert("חריגת מהירות. מהירות נוכחית $shown. מותרת ${m.limit}. ${penalties.spoken(over, m.urban)}",
             repeat = true, key = KEY)
     }
 
     companion object {
         const val OVER_KMH = 30
         const val CONFIRM = 3
+        const val HOLD_FIXES = 15   // about 15 s at one fix a second
         const val KEY = "speeding"
     }
 }

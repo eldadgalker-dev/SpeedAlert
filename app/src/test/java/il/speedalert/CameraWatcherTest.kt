@@ -131,14 +131,49 @@ class CameraWatcherTest {
         assertEquals("חריגת מהירות. מהירות נוכחית 80. מותרת 50. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות.", a!!.text)
         assertTrue(a.repeat)
         assertEquals(SpeedingWatcher.KEY, a.key)
-        assertNull(w.onLocation(32.002, 34.8, 80.0, 90.0))           // crossing, not along the road
-        assertNull(w.onLocation(32.002, 34.8031, 80.0, 0.0))         // 290 m off the road
+        // Field report 2026-11-08: a fix without a road match does not silence an alert under way.
+        assertNotNull(w.onLocation(32.002, 34.8, 80.0, 90.0))        // crossing, not along the road
+        assertNotNull(w.onLocation(32.002, 34.8031, 80.0, 0.0))      // 290 m off the road
         assertEquals("חריגת מהירות. מהירות נוכחית 60. מותרת 50. הוֹרֵד 10 קילומטר לשעה. קנס 250 שקלים.",
             w.onLocation(32.002, 34.8, 60.0, 0.0)!!.text)            // slowing down, still over: goes on
         assertNotNull(w.onLocation(32.002, 34.8, 51.0, 0.0))         // 1 over: still goes on
         assertEquals("מהירות תקינה. מותרת 50.", w.onLocation(32.002, 34.8, 48.0, 0.0)!!.text)
         assertNull(w.onLocation(32.002, 34.8, 45.0, 0.0))            // said once
         assertNull(w.onLocation(32.002, 34.8, 60.0, 0.0))            // 10 over again: under the start threshold
+    }
+
+    @Test fun speedingAtTheLimitIsNeverReduceZero() {
+        val roads = Roads.parse("# test\n50 1 3200000 3480000 1000 0\n")
+        val w = SpeedingWatcher(penalties).apply { this.roads = roads }
+        repeat(3) { w.onLocation(32.002, 34.8, 85.0, 0.0) }
+        assertNotNull(w.onLocation(32.002, 34.8, 85.0, 0.0))
+        // 50.4 is spoken "50": that is the limit, so "מהירות תקינה", not "הוֹרֵד 0" or "הוֹרֵד 1".
+        assertEquals("מהירות תקינה. מותרת 50.", w.onLocation(32.002, 34.8, 50.4, 0.0)!!.text)
+        assertEquals("מצלמת מהירות בעוד 500 מטר. מהירות נוכחית 90. מותרת 90. מהירות תקינה.", watcher(cam).message(cam, 500.0, 90.4))
+    }
+
+    @Test fun speedingHoldsTheLastRoadOnlyForAWhile() {
+        val roads = Roads.parse("# test\n50 1 3200000 3480000 1000 0\n")
+        val w = SpeedingWatcher(penalties).apply { this.roads = roads }
+        repeat(4) { w.onLocation(32.002, 34.8, 85.0, 0.0) }
+        repeat(SpeedingWatcher.HOLD_FIXES) { assertNotNull(w.onLocation(32.002, 34.9, 85.0, 0.0)) }   // no road here
+        assertNull(w.onLocation(32.002, 34.9, 85.0, 0.0))
+        assertNotNull(w.onLocation(32.002, 34.8, 85.0, 0.0))         // back on the road: still owed
+    }
+
+    @Test fun beepsThreeThenOneUntilTheEventEnds() {
+        val b = EventBeeps()
+        val speeding = Alert("x", repeat = true, key = SpeedingWatcher.KEY)
+        val ok = Alert("ok", repeat = false, key = SpeedingWatcher.KEY)
+        val camera = Alert("c", repeat = true, key = CameraWatcher.KEY + 1)
+        var t = 0L
+        fun next(a: Alert): Int { t += 1000; b.tick(listOf(a.key), t); return b.forNext(a, t) }
+        assertEquals(listOf(3, 1, 1, 1), listOf(next(speeding), next(speeding), next(speeding), next(ok)))
+        assertEquals(3, next(speeding))                               // a new event after the closing sentence
+        assertEquals(listOf(3, 1), listOf(next(camera), next(camera)))   // the camera silences speeding: its own event
+        t += 5000; b.tick(emptyList(), t)                             // camera passed, nothing due for 5 s
+        assertEquals(3, next(speeding))
+        assertEquals(1, next(Alert("long gap still same event", repeat = true, key = SpeedingWatcher.KEY)))
     }
 
     @Test fun speedingUsesTheFasterRoadBesideARamp() {
