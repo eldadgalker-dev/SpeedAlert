@@ -1,0 +1,62 @@
+# Rebuilds data/penalties.json (speeding fines and points) every week from the consolidated law
+# texts on Hebrew Wikisource (tools/fetch_penalties.py) and commits only a real change in the table.
+# The app downloads data/ from main; no new APK is needed.
+name: penalties
+
+on:
+  schedule:
+    - cron: "23 3 * * 0"   # Sundays 03:23 UTC
+  push:
+    branches: [main]
+    paths:
+      - "tools/fetch_penalties.py"
+      - ".github/workflows/penalties.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      # A parse doubt fails the run (GitHub mails the owner) and leaves the current table.
+      - name: Fetch fines and points (Wikisource)
+        run: python tools/fetch_penalties.py --out "$RUNNER_TEMP/penalties.json"
+
+      - name: Compare and accept
+        id: cmp
+        run: |
+          python - "$RUNNER_TEMP/penalties.json" data/penalties.json <<'PY'
+          import json, os, sys
+          new, old = (json.load(open(p, encoding="utf-8")) for p in sys.argv[1:3])
+          same = all(new[k] == old[k] for k in ("urban", "interurban"))
+          print("Penalties unchanged" if same else f"Penalties changed:\n{json.dumps(new, ensure_ascii=False)}")
+          open(os.environ["GITHUB_OUTPUT"], "a").write(f"changed={'false' if same else 'true'}\n")
+          PY
+
+      - name: Commit data
+        if: steps.cmp.outputs.changed == 'true'
+        run: |
+          cp "$RUNNER_TEMP/penalties.json" data/penalties.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/penalties.json
+          git commit -m "Fines and points update $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git pull --rebase origin main
+          done
+          exit 1

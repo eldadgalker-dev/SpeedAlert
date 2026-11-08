@@ -75,7 +75,7 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 | `roads.txt`, `roads.version` | Speed limit per road segment (not packed in the APK) (OSM `maxspeed`; untagged residential = 50; untagged main roads = 0, unknown, which blocks the match; the highest limit among parallel roads within 20 m wins), sha256 | OpenStreetMap via Overpass; `tools/fetch_roads.py`, weekly `.github/workflows/roads.yml` |
 | `buslanes.json` | Bus-lane enforcement sections (both ends) | Ministry of Transport, gov.il/he/pages/citizen_cameras |
 | `sections.json` | Average-speed sections, one entry per direction: name, limit, from, to, optional length_m | None published yet (empty list, filled by hand when a source appears) |
-| `penalties.json` | Fine and points by km/h over the limit, urban / interurban | צו התעבורה (עבירות קנס) items 75-78א and the points table of תקנות התעבורה; verified 2026-10-28 (sources in the file) |
+| `penalties.json` | Fine and points by km/h over the limit, urban / interurban | צו התעבורה (עבירות קנס) items 75-78א and the points table of תקנות התעבורה, read from Hebrew Wikisource (Open Law Book); `tools/fetch_penalties.py`, weekly `.github/workflows/penalties.yml` (commits only a changed table; a parse doubt fails the run and keeps the file) |
 
 Speed limit per camera: the camera's own `maxspeed` tag, else the nearest road
 (≤ 40 m) with `maxspeed`. Cameras with no known limit announce distance only.
