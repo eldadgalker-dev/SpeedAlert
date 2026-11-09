@@ -72,6 +72,11 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("com.google.android.gms:play-services-location:21.3.0")
+    // Own camera screen for speed signs (zoom, touch focus, burst); CameraX works on the phone only.
+    implementation("androidx.activity:activity-ktx:1.9.3")
+    implementation("androidx.camera:camera-camera2:1.4.2")
+    implementation("androidx.camera:camera-lifecycle:1.4.2")
+    implementation("androidx.camera:camera-view:1.4.2")
     testImplementation("junit:junit:4.13.2")
     // Real org.json for unit tests (android.jar only has stubs).
     testImplementation("org.json:json:20240303")

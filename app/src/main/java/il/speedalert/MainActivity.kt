@@ -23,10 +23,7 @@ import androidx.core.view.WindowInsetsCompat
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
-import android.content.ActivityNotFoundException
-import android.content.ClipData
 import android.location.Location
-import android.provider.MediaStore
 import android.text.InputType
 import androidx.core.content.FileProvider
 import com.google.android.gms.location.LocationCallback
@@ -304,18 +301,10 @@ class MainActivity : Activity() {
                 if (signFix == null && l != null && System.currentTimeMillis() - l.time < 30_000) signFix = l
             }
         }
-        val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", f)
-        val shoot = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-            putExtra(MediaStore.EXTRA_OUTPUT, uri)
-            clipData = ClipData.newRawUri("", uri)
-            addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        try {
-            @Suppress("DEPRECATION") startActivityForResult(shoot, REQ_SIGN)
-        } catch (e: ActivityNotFoundException) {
-            fused.removeLocationUpdates(signFixes)
-            AlertDialog.Builder(this).setMessage("לא נמצאה אפליקציית מצלמה בטלפון.").setPositiveButton("סגור", null).show()
-        }
+        // The app's own camera (zoom, touch focus, burst): the phone's camera app gave blurred photos.
+        @Suppress("DEPRECATION")
+        startActivityForResult(Intent(this, SignCameraActivity::class.java)
+            .putExtra(SignCameraActivity.EXTRA_PHOTO, f.path), REQ_SIGN)
     }
 
     @Deprecated("Activity API")
@@ -329,7 +318,8 @@ class MainActivity : Activity() {
         val roads = signRoads ?: RoadTiles(this)
         Thread {
             val small = runCatching { SignLog.prepare(photo) }.getOrNull()
-            val read = small?.let { runCatching { SignLog.readNumber(it) }.getOrNull() }
+            val burst = data?.getIntExtra(SignCameraActivity.EXTRA_READ, -1)?.takeIf { it > 0 }
+            val read = burst ?: small?.let { runCatching { SignLog.readNumber(it) }.getOrNull() }
             val limits = if (fix == null || roads == null) emptyList() else dbLimits(roads, fix)
             ui.post { confirmSign(photo, small, read, fix, limits) }
         }.start()
