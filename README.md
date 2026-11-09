@@ -17,7 +17,7 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
   and at start and stop, the app version, battery, CPU share and estimated drain. The "יומן שימוש" button
   shows totals overall and per version and hands the file to the phone's share sheet; the app sends nothing.
 - Speed-sign photos: the "צילום שלט מהירות" button opens the app's own camera screen (SignCameraActivity,
-  CameraX, CAMERA permission): pinch zoom, touch to focus and read around that point, live reading; the shutter
+  CameraX, CAMERA permission): pinch zoom, touch to focus and read around that point (yellow circle), a double tap on the circle shoots, live reading; the shutter
   takes a burst of 12 frames at 30 fps (short exposure), keeps the majority number and the sharpest frame
   (variance of the Laplacian). The location is followed at full accuracy meanwhile.
   The number is read on the phone (SignReader.kt: red ring by colour, digits against a 5x7 font, only legal

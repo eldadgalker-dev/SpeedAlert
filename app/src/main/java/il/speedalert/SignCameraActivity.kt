@@ -81,12 +81,12 @@ class SignCameraActivity : ComponentActivity() {
         status = TextView(this).apply {
             setTextColor(Color.WHITE); textSize = 18f; gravity = Gravity.CENTER
             setBackgroundColor(0x99000000.toInt()); setPadding(px(12), px(10), px(12), px(10))
-            text = "גע בשלט כדי למקד, צבוט כדי להגדיל"
+            text = "גע בשלט כדי לכוון, שתי נגיעות מהירות בעיגול מצלמות"
         }
         shutter = Button(this).apply {
             text = "צלם שלט"; textSize = 22f; setTextColor(Color.WHITE)
             background = GradientDrawable().apply { cornerRadius = px(16).toFloat(); setColor(0xFF1565C0.toInt()) }
-            setOnClickListener { if (burst == null) { burst = Burst(); text = "מצלם…"; isEnabled = false } }
+            setOnClickListener { shoot() }
         }
         val cancel = Button(this).apply {
             text = "בטל"; textSize = 18f
@@ -141,8 +141,23 @@ class SignCameraActivity : ComponentActivity() {
                     FocusMeteringAction.Builder(preview.meteringPointFactory.createPoint(e.x, e.y)).build())
                 return true
             }
+
+            // Two quick taps on the yellow circle take the photo (user request 2026-11-09):
+            // one tap aims, a double tap on the aimed circle shoots.
+            override fun onDoubleTap(e: MotionEvent): Boolean {
+                val r = marker.width / 2f
+                val onCircle = marker.visibility == View.VISIBLE &&
+                    Math.hypot((e.x - marker.x - r).toDouble(), (e.y - marker.y - r).toDouble()) <= r * 1.3
+                if (onCircle) shoot()
+                return true
+            }
         })
         preview.setOnTouchListener { _, e -> scale.onTouchEvent(e); if (!scale.isInProgress) taps.onTouchEvent(e); true }
+    }
+
+    private fun shoot() {
+        if (burst != null || camera == null) return
+        burst = Burst(); shutter.text = "מצלם…"; shutter.isEnabled = false
     }
 
     private fun start() {
@@ -182,7 +197,7 @@ class SignCameraActivity : ComponentActivity() {
             val read = runCatching { SignLog.readNumber(small) }.getOrNull()
             if (b == null) {
                 lastLive = now
-                runOnUiThread { status.text = if (read != null) "זוהה: $read" else "לא זוהה שלט. גע בשלט או הגדל" }
+                runOnUiThread { status.text = if (read != null) "זוהה: $read. שתי נגיעות בעיגול לצילום" else "לא זוהה שלט. גע בשלט או הגדל" }
                 return
             }
             val sharp = SignFrames.sharpness(small)
