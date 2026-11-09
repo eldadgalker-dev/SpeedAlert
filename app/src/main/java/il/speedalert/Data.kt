@@ -16,8 +16,27 @@ data class Camera(
     enum class Kind { SPEED, RED_LIGHT }
 }
 
-/** A road section with bus-lane enforcement cameras, from end [a] to end [b] (data/buslanes.json). */
-data class BusLane(val name: String, val aLat: Double, val aLon: Double, val bLat: Double, val bLon: Double)
+/**
+ * A bus lane with enforcement cameras (data/buslanes.json), from end [a] to end [b].
+ * Interurban sections (gov.il list): [hours] null, both directions. Urban lanes (data.gov.il):
+ * one way, from a to b, enforced only in [hours].
+ */
+data class BusLane(val name: String, val aLat: Double, val aLon: Double, val bLat: Double, val bLon: Double,
+                   val hours: LaneHours? = null) {
+    val oneWay get() = hours != null
+    /** Street name for speech: "בית אשל : רמב"ם - ..." -> "בית אשל". */
+    val street get() = name.substringBefore(':').trim()
+}
+
+/** Enforcement windows (hours of the day, 0..24) for Sun-Thu, Friday and Saturday. */
+class LaneHours(val wk: List<ClosedFloatingPointRange<Double>>, val fri: List<ClosedFloatingPointRange<Double>>,
+                val sat: List<ClosedFloatingPointRange<Double>>) {
+    fun active(t: java.time.ZonedDateTime): Boolean {
+        val h = t.hour + t.minute / 60.0
+        val day = when (t.dayOfWeek) { java.time.DayOfWeek.FRIDAY -> fri; java.time.DayOfWeek.SATURDAY -> sat; else -> wk }
+        return day.any { h in it }
+    }
+}
 
 data class Penalty(val fine: Int, val points: Int, val court: Boolean)
 
@@ -86,11 +105,22 @@ object Database {
     }
 
     fun parseBusLanes(json: String): List<BusLane> {
-        val a = JSONObject(json).getJSONArray("sections")
-        return (0 until a.length()).map { i ->
+        val root = JSONObject(json)
+        val a = root.getJSONArray("sections")
+        val sections = (0 until a.length()).map { i ->
             val o = a.getJSONObject(i)
             val from = o.getJSONArray("from"); val to = o.getJSONArray("to")
             BusLane(o.getString("road"), from.getDouble(0), from.getDouble(1), to.getDouble(0), to.getDouble(1))
+        }
+        val u = root.optJSONArray("lanes") ?: return sections
+        fun windows(o: JSONObject, key: String) = o.optJSONArray(key)?.let { w ->
+            (0 until w.length()).map { w.getJSONArray(it).let { p -> p.getDouble(0)..p.getDouble(1) } }
+        } ?: emptyList()
+        return sections + (0 until u.length()).map { i ->
+            val o = u.getJSONObject(i)
+            val from = o.getJSONArray("from"); val to = o.getJSONArray("to")
+            BusLane(o.getString("name"), from.getDouble(0), from.getDouble(1), to.getDouble(0), to.getDouble(1),
+                LaneHours(windows(o, "wk"), windows(o, "fri"), windows(o, "sat")))
         }
     }
 

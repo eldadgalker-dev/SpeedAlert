@@ -1,0 +1,65 @@
+# Refreshes the urban bus lanes with enforcement cameras in data/buslanes.json every week from the
+# Ministry of Transport dataset on data.gov.il (tools/fetch_buslanes.py) and commits only a real change.
+# The interurban sections in the same file stay as they are. The app downloads data/ from main.
+name: buslanes
+
+on:
+  schedule:
+    - cron: "41 3 * * 2"   # Tuesdays 03:41 UTC
+  push:
+    branches: [main]
+    paths:
+      - "tools/fetch_buslanes.py"
+      - ".github/workflows/buslanes.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pyproj
+        run: pip install --quiet "pyproj==3.7.1"
+
+      # A fetch or check failure fails the run (GitHub mails the owner) and leaves the current file.
+      - name: Fetch enforced bus lanes (data.gov.il)
+        run: python tools/fetch_buslanes.py --out "$RUNNER_TEMP/buslanes.json"
+
+      - name: Compare and accept
+        id: cmp
+        run: |
+          python - "$RUNNER_TEMP/buslanes.json" data/buslanes.json <<'PY'
+          import json, os, sys
+          new, old = (json.load(open(p, encoding="utf-8")) for p in sys.argv[1:3])
+          same = new.get("lanes") == old.get("lanes")
+          print("Bus lanes unchanged" if same else f"Bus lanes changed: {len(old.get('lanes', []))} -> {len(new['lanes'])}")
+          open(os.environ["GITHUB_OUTPUT"], "a").write(f"changed={'false' if same else 'true'}\n")
+          PY
+
+      - name: Commit data
+        if: steps.cmp.outputs.changed == 'true'
+        run: |
+          cp "$RUNNER_TEMP/buslanes.json" data/buslanes.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/buslanes.json
+          git commit -m "Bus lanes update $(date -u +%Y-%m-%dT%H:%MZ)"
+          for i in 1 2 3; do
+            git push origin HEAD:main && exit 0
+            git pull --rebase origin main
+          done
+          exit 1

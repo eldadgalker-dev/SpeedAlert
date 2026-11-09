@@ -274,7 +274,7 @@ class MainActivity : Activity() {
         }
         val at = getSharedPreferences(AlertService.PREFS, MODE_PRIVATE).getLong(DataUpdate.CHECKED_AT, 0)
         show(K_CHECKED, if (at == 0L) "עדיין לא" else date(at),
-            "קטעי מהירות ממוצעת ונתיבי תחבורה ציבורית מתעדכנים ידנית; השאר אוטומטית. מועדי השרת: דף ההסבר")
+            "קטעי מהירות ממוצעת מתעדכנים ידנית; השאר אוטומטית. מועדי השרת: דף ההסבר")
     }
 
     // ---- speed-sign photos (user request 2026-11-08) ----
@@ -642,6 +642,7 @@ class MainActivity : Activity() {
             "https://www.galker.com/software/",
             "רישיון: ⁦BSD-3-Clause⁩",
             "נתוני מפה: ⁦© OpenStreetMap contributors, ODbL⁩",
+            "נתיבי תחבורה ציבורית: משרד התחבורה, ⁦data.gov.il, CC-BY⁩",
         )
     }
 }

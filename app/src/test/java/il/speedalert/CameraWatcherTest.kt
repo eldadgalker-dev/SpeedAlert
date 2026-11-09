@@ -222,4 +222,43 @@ class CameraWatcherTest {
         while (lat <= 32.0450) { w.onLocation(lat, 34.8, 80.0, 0.0)?.let(alerts::add); lat += 0.0001 }
         assertEquals(listOf("אכיפת נתיב תחבורה ציבורית בכביש 9. אסור לנסוע בנתיב התחבורה הציבורית."), alerts.map { it.text })
     }
+
+    private fun drive(w: BusLaneWatcher, from: Double, to: Double, heading: Double): List<String> {
+        val out = mutableListOf<String>(); var lat = from; val step = if (to > from) 0.00005 else -0.00005
+        while ((to - lat) * step > 0) { w.onLocation(lat, 34.8, 40.0, heading)?.let { out += it.text }; lat += step }
+        return out
+    }
+
+    private val always = 0.0..24.0
+    private fun urban(name: String, a: Double, b: Double, wk: List<ClosedFloatingPointRange<Double>> = listOf(always)) =
+        BusLane(name, a, 34.8, b, 34.8, LaneHours(wk, listOf(always), emptyList()))
+
+    @Test fun urbanLaneOneWayAndInHours() {
+        val sunday10 = java.time.ZonedDateTime.of(2026, 11, 8, 10, 0, 0, 0, java.time.ZoneId.of("Asia/Jerusalem"))
+        val lane = urban("הרצל : א - ב", 32.0100, 32.0120)
+        val w = BusLaneWatcher(listOf(lane)).apply { clock = { sunday10 } }
+        assertEquals(listOf("מצלמת אכיפה בנתיב התחבורה הציבורית בהרצל. אסור לנסוע בנתיב."), drive(w, 32.0080, 32.0150, 0.0))
+        // Opposite direction: never.
+        assertEquals(emptyList<String>(), drive(BusLaneWatcher(listOf(lane)).apply { clock = { sunday10 } }, 32.0150, 32.0080, 180.0))
+        // Out of hours (Sun-Thu 16-19 only): never.
+        val late = BusLaneWatcher(listOf(urban("הרצל", 32.0100, 32.0120, listOf(16.0..19.0)))).apply { clock = { sunday10 } }
+        assertEquals(emptyList<String>(), drive(late, 32.0080, 32.0150, 0.0))
+        // Saturday with no windows: never.
+        val sat = BusLaneWatcher(listOf(lane)).apply { clock = { sunday10.minusDays(1) } }
+        assertEquals(emptyList<String>(), drive(sat, 32.0080, 32.0150, 0.0))
+    }
+
+    @Test fun urbanLaneSegmentsOfOneStreetAnnouncedOnce() {
+        val sunday10 = java.time.ZonedDateTime.of(2026, 11, 8, 10, 0, 0, 0, java.time.ZoneId.of("Asia/Jerusalem"))
+        val w = BusLaneWatcher(listOf(urban("הרצל : א - ב", 32.0100, 32.0120), urban("הרצל : ב - ג", 32.0121, 32.0140)))
+            .apply { clock = { sunday10 } }
+        assertEquals(1, drive(w, 32.0080, 32.0160, 0.0).size)
+    }
+
+    @Test fun busLanesFileParses() {
+        val lanes = Database.parseBusLanes(java.io.File("../data/buslanes.json").readText(Charsets.UTF_8))
+        assertTrue(lanes.count { !it.oneWay } >= 6)
+        assertTrue(lanes.count { it.oneWay } >= 60)
+        assertTrue(lanes.all { it.aLat in 29.4..33.4 && it.aLon in 34.2..35.9 })
+    }
 }
