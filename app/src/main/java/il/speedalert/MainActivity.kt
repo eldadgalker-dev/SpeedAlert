@@ -286,8 +286,11 @@ class MainActivity : Activity() {
     private var signRoads: RoadTiles? = null
     private val fused by lazy { LocationServices.getFusedLocationProviderClient(this) }
     private val signFixes = object : LocationCallback() {
-        override fun onLocationResult(r: LocationResult) { r.lastLocation?.let { signFix = it } }
+        override fun onLocationResult(r: LocationResult) { r.lastLocation?.let { signFix = it; onSignFix?.invoke(it) } }
     }
+    /** Fixes that arrive while the confirm dialog is open (a cold GPS when alerts are off). */
+    private var onSignFix: ((Location) -> Unit)? = null
+    private fun stopSignFixes() { onSignFix = null; runCatching { fused.removeLocationUpdates(signFixes) } }
 
     /** Opens the phone's camera; the location is followed at full accuracy until the photo comes back. */
     private fun startSignPhoto() = withPermissions {
@@ -312,16 +315,15 @@ class MainActivity : Activity() {
         @Suppress("DEPRECATION") super.onActivityResult(requestCode, resultCode, data)
         if (requestCode != REQ_SIGN) return
         val fix = signFix
-        runCatching { fused.removeLocationUpdates(signFixes) }
-        val photo = signPhoto ?: return
-        if (resultCode != RESULT_OK || !photo.exists() || photo.length() == 0L) { photo.delete(); return }
+        val photo = signPhoto ?: return stopSignFixes()
+        if (resultCode != RESULT_OK || !photo.exists() || photo.length() == 0L) { stopSignFixes(); photo.delete(); return }
         val roads = signRoads ?: RoadTiles(this)
         Thread {
             val small = runCatching { SignLog.prepare(photo) }.getOrNull()
             val burst = data?.getIntExtra(SignCameraActivity.EXTRA_READ, -1)?.takeIf { it > 0 }
             val read = burst ?: small?.let { runCatching { SignLog.readNumber(it) }.getOrNull() }
             val limits = if (fix == null || roads == null) emptyList() else dbLimits(roads, fix)
-            ui.post { confirmSign(photo, small, read, fix, limits) }
+            ui.post { confirmSign(photo, small, read, fix, limits, roads) }
         }.start()
     }
 
@@ -337,16 +339,36 @@ class MainActivity : Activity() {
         return emptyList()
     }
 
-    private fun confirmSign(photo: File, small: android.graphics.Bitmap?, read: Int?, fix: Location?, limits: List<Int>) {
-        if (isFinishing || isDestroyed) return
+    private fun confirmSign(photo: File, small: android.graphics.Bitmap?, read: Int?, fix0: Location?, limits0: List<Int>,
+                            roads: RoadTiles?) {
+        if (isFinishing || isDestroyed) return stopSignFixes()
+        var fix = fix0; var limits = limits0
         val box = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(px(20), px(8), px(20), 0) }
         small?.let { box.addView(ImageView(this).apply { setImageBitmap(it); adjustViewBounds = true },
             LinearLayout.LayoutParams(-1, px(220))) }
-        val where = if (fix == null) "אין מיקום: התמונה תישמר בלי מיקום מדויק."
-                    else "מיקום: דיוק ${fix.accuracy.toInt()} מטר" + (if (fix.hasBearing()) ", כיוון ${fix.bearing.toInt()}°" else "")
-        val db = if (limits.isEmpty()) "במאגר: לא ידוע" else "במאגר: ${limits.joinToString(" / ")}"
         val got = if (read == null) "לא זוהה מספר בתמונה: הקלד את המספר שעל השלט." else "זוהה בתמונה: $read"
-        box.addView(text(15f, pal.text, "$got\n$db\n$where").apply { setPadding(0, px(8), 0, px(8)) })
+        fun info(): String {
+            val f = fix
+            val where = if (f == null) "אין מיקום עדיין: ממתין ל-GPS."
+                        else "מיקום: דיוק ${f.accuracy.toInt()} מטר" + (if (f.hasBearing()) ", כיוון ${f.bearing.toInt()}°" else "") +
+                            (if (f.accuracy > GOOD_FIX_M) " (משתפר...)" else "")
+            val db = if (limits.isEmpty()) "במאגר: לא ידוע" else "במאגר: ${limits.joinToString(" / ")}"
+            return "$got\n$db\n$where"
+        }
+        val infoView = text(15f, pal.text, info()).apply { setPadding(0, px(8), 0, px(8)) }
+        box.addView(infoView)
+        // A cold GPS (alerts off) gives a coarse first fix: keep a better one taken at the same place.
+        onSignFix = { l ->
+            val f = fix
+            if (f == null || (l.accuracy < f.accuracy && l.distanceTo(f) <= f.accuracy + 30)) {
+                val wasCoarse = f == null || f.accuracy > GOOD_FIX_M
+                fix = l; infoView.text = info()
+                if (roads != null && wasCoarse) Thread {
+                    val found = dbLimits(roads, l)
+                    ui.post { if (fix === l) { limits = found; infoView.text = info() } }
+                }.start()
+            }
+        }
         val input = EditText(this).apply {
             inputType = InputType.TYPE_CLASS_NUMBER; hint = "המהירות שעל השלט"
             setText(read?.toString() ?: ""); textSize = 22f
@@ -364,6 +386,7 @@ class MainActivity : Activity() {
             }
             .setNegativeButton("בטל") { _, _ -> photo.delete() }
             .setOnCancelListener { photo.delete() }
+            .setOnDismissListener { stopSignFixes() }
             .show()
     }
 
@@ -609,6 +632,7 @@ class MainActivity : Activity() {
         private const val GREY = 0xFF757575.toInt()
         private const val BLUE = 0xFF1565C0.toInt()
         private const val REQ_SIGN = 7
+        private const val GOOD_FIX_M = 20f
         private const val K_SIGN_PHOTO = "sign_photo"
         private const val MAX_SHARED_PHOTOS = 50
         private val DATA_ROWS = linkedMapOf(
