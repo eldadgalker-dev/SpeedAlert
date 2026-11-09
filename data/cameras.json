@@ -909,10 +909,10 @@
    "id": 3258018465,
    "lat": 32.14363,
    "lon": 34.894479,
-   "limit": 50,
-   "limitSource": "road",
+   "limit": null,
+   "limitSource": null,
    "direction": null,
-   "urban": true,
+   "urban": false,
    "kind": "speed",
    "name": null
   },
