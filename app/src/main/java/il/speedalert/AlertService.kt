@@ -278,7 +278,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         // Speeding without a camera is checked only when no camera alert is due.
         timing.fixAgeMs = ((SystemClock.elapsedRealtimeNanos() - loc.elapsedRealtimeNanos) / 1_000_000).coerceIn(0, 5000)
         val camera = watcher.onLocation(lat, lon, speedKmh, heading)
-        // The pass sound at the camera itself, timed from the fix's age (user request 2026-11-02).
+        // The pass sound 10 m before the camera, timed from the fix's age (user requests 2026-11-02, 2026-11-09).
         watcher.passAt?.let { (_, ms) ->
             val age = (SystemClock.elapsedRealtimeNanos() - loc.elapsedRealtimeNanos) / 1_000_000
             HandlerCompat.postDelayed(main, { passSound() }, PASS, (ms - age).coerceAtLeast(0))
@@ -338,7 +338,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     }
 
     /**
-     * At the camera itself (user request 2026-11-02): a long two-tone square wave, another sound
+     * 10 m before the camera (user requests 2026-11-02, 2026-11-09): a long two-tone square wave, another sound
      * than the beeps and louder to the ear at the same volume; it cuts off whatever is playing.
      */
     private fun passSound() {

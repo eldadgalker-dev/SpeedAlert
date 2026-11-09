@@ -71,8 +71,8 @@ class CameraWatcherTest {
         assertEquals(1, marks.size)
         val (d, at) = marks[0]
         assertEquals(1L, at.first)
-        assertTrue(d <= 50.0)                                       // within 1.5 s at 120 km/h
-        assertEquals((d / (120 / 3.6) * 1000).toLong(), at.second)   // timed to the camera
+        assertTrue(d <= 60.0)                                       // within 1.5 s (+10 m) at 120 km/h
+        assertEquals(((d - 10) / (120 / 3.6) * 1000).toLong(), at.second)   // timed to 10 m before the camera
     }
 
     @Test fun legalSpeedAnnouncesSpeedAndLimit() {

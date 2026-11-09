@@ -17,8 +17,8 @@ import kotlin.math.roundToInt
  *   duplicate map points) are silent while that camera is remembered;
  * - a new camera starts only when two fixes confirm we are closing in on it.
  *
- * [passAt] marks the moment the car reaches an announced camera, for the pass sound
- * (user request 2026-11-02).
+ * [passAt] marks the moment the car is [PASS_BEFORE_M] before an announced camera, for the pass
+ * sound (user requests 2026-11-02, 2026-11-09).
  */
 /**
  * What to say; [repeat] alerts are spoken again and again while they last, the others once.
@@ -74,7 +74,8 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
             // Moving away means passed; while standing still GPS jitter must not end the alert.
             val away = moving && d > s.lastDist + 3
             if (s.announced && !s.beeped && moving) {
-                val eta = d / (speedKmh / 3.6) * 1000
+                // The pass sound ends the event [PASS_BEFORE_M] before the camera (user request 2026-11-09).
+                val eta = (d - PASS_BEFORE_M).coerceAtLeast(0.0) / (speedKmh / 3.6) * 1000
                 if (away && s.lastDist < PASS_NEAR_M) { s.beeped = true; passAt = id to 0L }
                 else if (!away && eta <= PASS_AHEAD_MS) { s.beeped = true; passAt = id to eta.toLong() }
             }
@@ -174,5 +175,6 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         const val KEY = "camera-"
         const val PASS_AHEAD_MS = 1500.0   // more than the 1 s between fixes, so the sound is scheduled before the camera
         const val PASS_NEAR_M = 150.0
+        const val PASS_BEFORE_M = 10.0
     }
 }
