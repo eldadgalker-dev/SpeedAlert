@@ -285,18 +285,32 @@ class MainActivity : Activity() {
      * Each table: the date of its data (user request 2026-11-09: "updated" or "fetched" in the file,
      * the day the content last changed at the source side), and when it reached this phone.
      */
+    /**
+     * One clear state per data set (user request 2026-11-09: "updated or not?"). A successful
+     * check compares every table with the server and downloads what differs, so after it every
+     * table equals the server: "מעודכן", also a table still as packed in the APK (nothing newer
+     * existed). Without a successful check in [FRESH_MS] the state is "לא נבדק" in orange.
+     * The second line is the date of the data itself (or of the download, for the road index).
+     */
     private fun showDataDates() {
+        val at = getSharedPreferences(AlertService.PREFS, MODE_PRIVATE).getLong(DataUpdate.CHECKED_AT, 0)
+        val fresh = at > 0 && System.currentTimeMillis() - at < FRESH_MS
         for ((key, name) in DATA_ROWS) {
             val f = File(filesDir, name)
             val of = dataDate(name)
-            val got = if (f.exists()) "הורד לטלפון ${date(f.lastModified())}" else "בגרסת האפליקציה, עדיין לא הורד עדכון"
-            if (of != null) show(key, "נתונים מ-$of", got)
-            else show(key, if (f.exists()) date(f.lastModified()) else "בגרסת האפליקציה", if (f.exists()) "הורד מהשרת" else "עדיין לא הורד עדכון")
+            val note = when {
+                of != null -> "נתונים מ-$of"
+                f.exists() -> "הורד ב-${day(f.lastModified())}"
+                else -> "כפי שבגרסת האפליקציה"
+            } + if (name == Database.SECTIONS) ". מתעדכן ידנית, אין עדיין מקור ציבורי" else ""
+            show(key, if (fresh) "מעודכן" else "לא נבדק", note, if (fresh) GREEN else ORANGE)
         }
-        val at = getSharedPreferences(AlertService.PREFS, MODE_PRIVATE).getLong(DataUpdate.CHECKED_AT, 0)
         show(K_CHECKED, if (at == 0L) "עדיין לא" else date(at),
-            "קטעי מהירות ממוצעת מתעדכנים ידנית (אין עדיין מקור ציבורי); השאר אוטומטית. מועדי השרת: דף ההסבר")
+            if (fresh) "כל המאגרים זהים לשרת. בדיקה כל 30 דקות כשההתראות פועלות, ובכל פתיחה."
+            else "אין בדיקה מוצלחת ב-24 השעות האחרונות: בדוק חיבור לאינטרנט.")
     }
+
+    private fun day(ms: Long) = SimpleDateFormat("dd/MM/yyyy", Locale.ROOT).format(Date(ms))
 
     // ---- speed-sign photos (user request 2026-11-08) ----
 
@@ -494,8 +508,8 @@ class MainActivity : Activity() {
         addView(text(13f, pal.muted).apply { visibility = View.GONE; notes[key] = this })
     }
 
-    private fun show(key: String, value: String, note: String = "") {
-        info.getValue(key).text = value
+    private fun show(key: String, value: String, note: String = "", color: Int = pal.text) {
+        info.getValue(key).apply { text = value; setTextColor(color) }
         notes.getValue(key).apply { text = note; visibility = if (note.isEmpty()) View.GONE else View.VISIBLE }
     }
 
@@ -619,6 +633,12 @@ class MainActivity : Activity() {
         super.onPause()
     }
 
+    /** The sign photo's full-accuracy GPS never outlives the screen (review 2026-11-09). */
+    override fun onDestroy() {
+        stopSignFixes()
+        super.onDestroy()
+    }
+
     private fun onToggle() {
         if (AlertService.running) AlertService.stop(this) else withPermissions { AlertService.start(this) }
     }
@@ -668,6 +688,7 @@ class MainActivity : Activity() {
             "קטעי מהירות ממוצעת" to Database.SECTIONS,
         )
         private const val K_CHECKED = "בדיקה אחרונה מול השרת"
+        private const val FRESH_MS = 24 * 3600_000L
         private const val K_BATTERY = "סוללה"
         private const val K_DRAIN = "סוללה (האפליקציה)"
         private const val K_MEMORY = "זיכרון האפליקציה"

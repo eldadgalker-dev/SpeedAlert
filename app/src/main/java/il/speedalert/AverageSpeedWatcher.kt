@@ -30,7 +30,8 @@ class AverageSpeedWatcher(@Volatile var sections: List<AverageSection>) {
 
     private fun inside(t: Trip, lat: Double, lon: Double, speedKmh: Double, nowMs: Long): Alert? {
         val s = t.section
-        t.travelled += Geo.distance(t.lat, t.lon, lat, lon)
+        // Standing still, GPS jitter is not distance (review 2026-11-09): it would raise the average.
+        if (speedKmh >= 3) t.travelled += Geo.distance(t.lat, t.lon, lat, lon)
         t.lat = lat; t.lon = lon
         val length = s.lengthM ?: Geo.distance(s.aLat, s.aLon, s.bLat, s.bLon)
         val seconds = (nowMs - t.startMs) / 1000.0

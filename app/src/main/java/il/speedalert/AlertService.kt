@@ -108,6 +108,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private val fused by lazy { LocationServices.getFusedLocationProviderClient(this) }
     private var lastDriving = 0L                    // last fix at driving speed
     private var savingFrom: Location? = null        // first fix in power-saving mode (no motion sensor)
+    private var lastFix: Location? = null           // for the speed of a fix that has none
+    private val checking = java.util.concurrent.atomic.AtomicBoolean(false)   // one data check at a time
     private var fast = true                         // GPS once a second (near a camera or alerting)
     private var wokeByMotion = false                // GPS back on a motion trigger, no driving seen yet
     private val sensors by lazy { getSystemService(SENSOR_SERVICE) as SensorManager }
@@ -192,7 +194,9 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
 
     private val dataCheck = object : Runnable {
         override fun run() {
-            Thread {
+            // A slow check never overlaps the next one (review 2026-11-09).
+            if (checking.compareAndSet(false, true)) Thread {
+                try {
                 val changed = runCatching { DataUpdate.run(this@AlertService) }.getOrNull()
                 if (changed?.any == true) {
                     val cams = Database.cameras(this@AlertService)
@@ -205,6 +209,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
                     dataNote = "עודכן, נתונים מ-${Database.fetched(this@AlertService)}"
                 }
                 runCatching { AppUpdate.check() }.getOrNull()?.let { main.post { notifyVersion(it) } }
+                } finally { checking.set(false) }
             }.start()
             main.postDelayed(this, DataUpdate.INTERVAL_MS)
         }
@@ -265,7 +270,14 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     }
 
     private fun onLocation(loc: Location) {
-        val speedKmh = if (loc.hasSpeed()) loc.speed * 3.6 else 0.0
+        // A fix without speed takes it from the previous fix, so a moving car is never taken as idle (review 2026-11-09).
+        val prev = lastFix; lastFix = loc
+        val dt = if (prev == null) 0L else (loc.elapsedRealtimeNanos - prev.elapsedRealtimeNanos) / 1_000_000
+        val speedKmh = when {
+            loc.hasSpeed() -> loc.speed * 3.6
+            prev != null && dt in 500..10_000 -> prev.distanceTo(loc) / dt * 3600.0
+            else -> 0.0
+        }
         if (powerSaving(loc, speedKmh)) return
         val heading = if (loc.hasBearing() && speedKmh >= CameraWatcher.MIN_SPEED_KMH) loc.bearing.toDouble() else null
         speed = speedKmh

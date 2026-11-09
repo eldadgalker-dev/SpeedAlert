@@ -25,15 +25,17 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
   with time, version, position, accuracy, bearing, the number read, the number confirmed, the road-table limit
   there and whether they differ; the photo (upright, up to 1600 px) is kept next to it. "יומן שלטי מהירות"
   shows the log and hands the CSV and the latest 50 photos to the share sheet, to check corrections to the data.
-- Data table on the main screen: when each data file last changed on the phone, and the last successful check.
+- Data table on the main screen: per data file "מעודכן" (green) when the last check against the server succeeded
+  within 24 h (every changed file is downloaded by it, so all files then equal the server), else "לא נבדק" (orange);
+  below it the date of the data itself ("נתונים מ-"); then the time of the last successful check.
 - Buttons: mode (beeps and sentences / beeps only, saved), reset (service restarted, speech engine reconnected),
   full shut-down (alerts stopped and the app closed).
 - Every alert opens with three loud, harsh beeps on the alarm stream; a continuous alert then repeats
   without a break, with one beep before every further sentence, the closing "מהירות תקינה" included, until
   the event ends (slowing down, camera passed). A dropped road match does not stop a speeding alert under way,
   and the excess is counted from the speed as spoken ("נוכחית 90. מותרת 90." is "מהירות תקינה").
-- At the camera itself: a long two-tone sound, different from the beeps and louder to the ear; it cuts off
-  any sentence under way. It is timed from the speed so that it plays at the camera's point, not at the next GPS fix.
+- 10 m before the camera: a long two-tone sound, different from the beeps and louder to the ear; it cuts off
+  any sentence under way. It is timed from the speed so that it plays 10 m before the camera, not at the next GPS fix.
 - A camera alert silences a speeding alert at once, until the camera is passed.
 - A fine without points is said without "ללא נקודות".
 - An announced camera that is left behind without being reached (the road turned off) closes its event with
@@ -46,6 +48,8 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 - Speed camera: from 500 m before it the alert repeats without a break, with the current
   distance and speed, until the camera is passed (also while stopped near it):
   "מצלמת מהירות בעוד 480 מטר. מהירות נוכחית 120. מותרת 90. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות."
+  The distance said is the one left when the number is heard (speed, fix age, beeps and speech time);
+  near the camera the sentence shortens: first the fine and points drop, then the current speed.
 - Red-light camera: from 300 m before it, repeated until it is passed or the car stops (below 5 km/h):
   "מצלמת רמזור בעוד 280 מטר."
 - Within the limit every message ends with "מהירות תקינה."; after speeding without a camera,
@@ -120,7 +124,7 @@ APK: `~/.speedalert-build/app/outputs/apk/debug/app-debug.apk`.
 
 ## Known limits
 
-- OSM coverage of Israeli cameras is partial (182 cameras on 2026-10-28; 46 without a known limit).
+- OSM coverage of Israeli cameras is partial (219 cameras on 2026-11-09; 55 without a known limit).
   The official GovMap layer is not downloadable as a file and is not included.
 - Point-to-point (average speed) sections: `AverageSpeedWatcher` announces the start and the end and
   alerts only while the section average is above the limit, with the speed that brings it back.

@@ -38,6 +38,8 @@ object UsageLog {
         runCatching {
             if (!f.exists()) f.writeText(HEADER + "\n")
             f.appendText(line + "\n")
+            // Read the file only when it may be over the limit (a line is at least 40 bytes), not every append.
+            if (f.length() < (MAX_LINES + 200) * 40L) return@runCatching
             val lines = f.readLines()
             if (lines.size > MAX_LINES + 200) f.writeText((listOf(HEADER) + lines.takeLast(MAX_LINES)).joinToString("\n", postfix = "\n"))
         }

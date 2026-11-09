@@ -81,7 +81,7 @@ class SignCameraActivity : ComponentActivity() {
         status = TextView(this).apply {
             setTextColor(Color.WHITE); textSize = 18f; gravity = Gravity.CENTER
             setBackgroundColor(0x99000000.toInt()); setPadding(px(12), px(10), px(12), px(10))
-            text = "גע בשלט כדי לכוון, שתי נגיעות מהירות בעיגול מצלמות"
+            text = "גע בשלט כדי לכוון, שתי נגיעות מהירות בעיגול לצילום"
         }
         shutter = Button(this).apply {
             text = "צלם שלט"; textSize = 22f; setTextColor(Color.WHITE)
@@ -216,7 +216,8 @@ class SignCameraActivity : ComponentActivity() {
         val raw = img.toBitmap()
         val r = img.cropRect
         val m = Matrix().apply { postRotate(img.imageInfo.rotationDegrees.toFloat()) }
-        return Bitmap.createBitmap(raw, r.left, r.top, r.width(), r.height(), m, true)
+        // The full frame is freed at once, not left to the collector (11 MB every 350 ms, review 2026-11-09).
+        return Bitmap.createBitmap(raw, r.left, r.top, r.width(), r.height(), m, true).also { if (it !== raw) raw.recycle() }
     }
 
     private fun finishBurst(b: Burst) {
