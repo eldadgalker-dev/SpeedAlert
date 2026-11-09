@@ -13,7 +13,7 @@ any parse doubt exits non-zero and the current file stays as it is.
 
 Usage: python tools/fetch_penalties.py [--out data/penalties.json]
 """
-import argparse, json, re, sys, time, urllib.parse, urllib.request
+import argparse, datetime, json, re, sys, time, urllib.parse, urllib.request
 
 API = "https://he.wikisource.org/w/api.php"
 FINES_PAGE = "צו התעבורה (עבירות קנס)"
@@ -123,7 +123,9 @@ def main():
             "https://he.wikisource.org/wiki/" + urllib.parse.quote(POINTS_PAGE.replace(" ", "_")) + " . "
             "Above the last fine band there is no fine in the order: court summons.")
     with open(args.out, "w", encoding="utf-8", newline="\n") as f:
-        json.dump({"note": note, **table}, f, ensure_ascii=False, indent=2)
+        # "updated": the day the table was rebuilt; the workflow commits it only with a real change,
+        # so in data/ it is the day the fines or points last changed (shown in the app).
+        json.dump({"updated": datetime.date.today().isoformat(), "note": note, **table}, f, ensure_ascii=False, indent=2)
         f.write("\n")
     for k in ("urban", "interurban"):
         print(k, [(r["from"], r["to"], r["fine"], r["points"]) for r in table[k]])

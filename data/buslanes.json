@@ -1,4 +1,5 @@
 {
+ "updated": "2026-11-09",
  "source": "Ministry of Transport, https://www.gov.il/he/pages/citizen_cameras (updated 2025-10-29); one entry per section, both directions",
  "hours": "Sun-Thu 06:00-24:00; Fri and holiday eves 06:00-15:00; after Shabbat and holidays 20:45-24:00; none on Shabbat and holidays",
  "lanes_source": "Ministry of Transport, data.gov.il dataset nataz_kayam (CC-BY), lanes with enforcement cameras; direction of travel from 'from' to 'to'; hours per day type (wk Sun-Thu, fri, sat), holidays not marked",

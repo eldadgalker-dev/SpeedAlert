@@ -16,7 +16,7 @@ and the current file stays. Needs pyproj (ITM -> WGS84).
 
 Usage: python tools/fetch_buslanes.py [--out data/buslanes.json] [--base data/buslanes.json]
 """
-import argparse, json, sys, time, urllib.parse, urllib.request
+import argparse, datetime, json, sys, time, urllib.parse, urllib.request
 
 from pyproj import Transformer
 
@@ -94,6 +94,7 @@ def main():
         raise SystemExit(f"only {len(lanes)} enforced lanes of {len(recs)} records")
     base = json.load(open(a.base, encoding="utf-8"))
     out = {
+        "updated": datetime.date.today().isoformat(),   # committed only with a real change (shown in the app)
         "source": base["source"],
         "hours": base["hours"],
         "sections": base["sections"],
@@ -103,7 +104,7 @@ def main():
     }
     with open(a.out, "w", encoding="utf-8", newline="\n") as f:
         f.write("{\n")
-        for k in ("source", "hours", "lanes_source"):
+        for k in ("updated", "source", "hours", "lanes_source"):
             f.write(f' {json.dumps(k)}: {json.dumps(out[k], ensure_ascii=False)},\n')
         for k in ("sections", "lanes"):
             f.write(f' {json.dumps(k)}: [\n')

@@ -62,13 +62,13 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     @Volatile private var talkingId: String? = null
     private fun ended(id: String?) { if (id == talkingId) { talkingUntil = 0; retried = false } }
     private val timing = SpeechTiming(beepGapMs = BEEP_GAP_MS)
-    @Volatile private var startedAt = 0L             // the engine began the sentence under way
+    @Volatile private var ttsStartedAt = 0L          // the engine began the sentence under way
 
     /** Learns the engine's start and pace from a sentence that was spoken to its end. */
     private fun learnTiming(id: String?) {
         val text = talkingText ?: return
-        if (id != talkingId || startedAt <= spokeAt) return
-        timing.learn(text, startedAt - spokeAt, System.currentTimeMillis() - startedAt)
+        if (id != talkingId || ttsStartedAt <= spokeAt) return
+        timing.learn(text, ttsStartedAt - spokeAt, System.currentTimeMillis() - ttsStartedAt)
         getSharedPreferences(PREFS, MODE_PRIVATE).edit()
             .putFloat(K_TTS_START, timing.startMs.toFloat()).putFloat(K_TTS_PACE, timing.msPerUnit.toFloat()).apply()
     }
@@ -254,7 +254,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         // isSpeaking is not reliable on every engine (false for a moment after speak(), or stuck):
         // the end of each sentence is taken from the engine's own callbacks, with [MAX_TALK_MS] as a cap.
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(id: String?) { if (id == talkingId) startedAt = System.currentTimeMillis() }
+            override fun onStart(id: String?) { if (id == talkingId) ttsStartedAt = System.currentTimeMillis() }
             override fun onDone(id: String?) { learnTiming(id); ended(id) }
             @Deprecated("API 21") override fun onError(id: String?) { main.post { if (id == talkingId) failed(talkingText) } }
             override fun onError(id: String?, code: Int) { main.post { if (id == talkingId) failed(talkingText) } }

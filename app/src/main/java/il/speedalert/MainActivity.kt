@@ -235,8 +235,17 @@ class MainActivity : Activity() {
         toggle.text = getString(if (running) R.string.stop else R.string.start)
         toggle.background = round(if (running) RED else GREEN, 14)
         modeButton.text = if (AlertService.beepsOnly) "מצב: צפצופים בלבד (החלף להודעות)" else "מצב: צפצופים והודעות (החלף לצפצופים בלבד)"
-        updateView.text = updateText
-        updateView.visibility = if (updateText.isEmpty()) View.GONE else View.VISIBLE
+        // A new version waiting stands out (user request 2026-11-09); progress lines stay quiet.
+        val newer0 = AppUpdate.available
+        val shownUpdate = updateText.ifEmpty { newer0?.let { "גרסה ${it.versionName} זמינה להורדה: לחץ \"בדוק עדכון\"" } ?: "" }
+        updateView.text = shownUpdate
+        updateView.visibility = if (shownUpdate.isEmpty()) View.GONE else View.VISIBLE
+        val loud = newer0 != null && (updateText.isEmpty() || updateText.contains(newer0.versionName))
+        updateView.textSize = if (loud) 17f else 14f
+        updateView.setTypeface(null, if (loud) Typeface.BOLD else Typeface.NORMAL)
+        updateView.setTextColor(if (loud) Color.WHITE else pal.muted)
+        updateView.background = if (loud) round(ORANGE, 14) else null
+        updateView.setPadding(px(12), px(if (loud) 12 else 8), px(12), px(if (loud) 12 else 0))
 
         val level = Usage.batteryLevel(this)
         val charging = Usage.charging(this)
@@ -260,18 +269,33 @@ class MainActivity : Activity() {
             if (newer == null) "" else "גרסה ${newer.versionName} זמינה: לחץ \"בדוק עדכון\"")
     }
 
+    /** The data date written at the head of a table ("updated" or "fetched"), as dd/MM/yyyy. */
+    private fun dataDate(name: String): String? = runCatching {
+        val local = File(filesDir, name)
+        val head = (if (local.exists()) local.inputStream() else assets.open(name)).use { i ->
+            val b = ByteArray(4096); val n = i.read(b).coerceAtLeast(0); String(b, 0, n, Charsets.UTF_8)
+        }
+        Regex(""""(?:updated|fetched)"\s*:\s*"(\d{4})-(\d\d)-(\d\d)""").find(head)
+            ?.destructured?.let { (y, m, d) -> "$d/$m/$y" }
+    }.getOrNull()
+
     private fun date(ms: Long) = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.ROOT).format(Date(ms))
 
-    /** Last change of each table on the phone (the time it was saved), else the copy packed in the app. */
+    /**
+     * Each table: the date of its data (user request 2026-11-09: "updated" or "fetched" in the file,
+     * the day the content last changed at the source side), and when it reached this phone.
+     */
     private fun showDataDates() {
         for ((key, name) in DATA_ROWS) {
             val f = File(filesDir, name)
-            if (f.exists()) show(key, date(f.lastModified()), "הורד מהשרת")
-            else show(key, "בגרסת האפליקציה", "עדיין לא הורד עדכון")
+            val of = dataDate(name)
+            val got = if (f.exists()) "הורד לטלפון ${date(f.lastModified())}" else "בגרסת האפליקציה, עדיין לא הורד עדכון"
+            if (of != null) show(key, "נתונים מ-$of", got)
+            else show(key, if (f.exists()) date(f.lastModified()) else "בגרסת האפליקציה", if (f.exists()) "הורד מהשרת" else "עדיין לא הורד עדכון")
         }
         val at = getSharedPreferences(AlertService.PREFS, MODE_PRIVATE).getLong(DataUpdate.CHECKED_AT, 0)
         show(K_CHECKED, if (at == 0L) "עדיין לא" else date(at),
-            "קטעי מהירות ממוצעת מתעדכנים ידנית; השאר אוטומטית. מועדי השרת: דף ההסבר")
+            "קטעי מהירות ממוצעת מתעדכנים ידנית (אין עדיין מקור ציבורי); השאר אוטומטית. מועדי השרת: דף ההסבר")
     }
 
     // ---- speed-sign photos (user request 2026-11-08) ----
@@ -631,6 +655,7 @@ class MainActivity : Activity() {
         private const val GREEN = 0xFF2E7D32.toInt()
         private const val GREY = 0xFF757575.toInt()
         private const val BLUE = 0xFF1565C0.toInt()
+        private const val ORANGE = 0xFFE65100.toInt()
         private const val REQ_SIGN = 7
         private const val GOOD_FIX_M = 20f
         private const val K_SIGN_PHOTO = "sign_photo"
