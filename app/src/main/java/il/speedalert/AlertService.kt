@@ -61,6 +61,17 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     @Volatile private var talkingUntil = 0L          // own record of the sentence under way (onDone clears it)
     @Volatile private var talkingId: String? = null
     private fun ended(id: String?) { if (id == talkingId) { talkingUntil = 0; retried = false } }
+    private val timing = SpeechTiming(beepGapMs = BEEP_GAP_MS)
+    @Volatile private var startedAt = 0L             // the engine began the sentence under way
+
+    /** Learns the engine's start and pace from a sentence that was spoken to its end. */
+    private fun learnTiming(id: String?) {
+        val text = talkingText ?: return
+        if (id != talkingId || startedAt <= spokeAt) return
+        timing.learn(text, startedAt - spokeAt, System.currentTimeMillis() - startedAt)
+        getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+            .putFloat(K_TTS_START, timing.startMs.toFloat()).putFloat(K_TTS_PACE, timing.msPerUnit.toFloat()).apply()
+    }
     private var talkingText: String? = null
     private var retried = false                      // one reconnect of the speech engine per sentence
     private var ttsAt = 0L                           // engine (re)connected
@@ -116,6 +127,11 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         audio = getSystemService(AUDIO_SERVICE) as AudioManager
         val cameras = Database.cameras(this)
         watcher = CameraWatcher(cameras, Database.penalties(this))
+        watcher.timing = timing.apply {
+            val p = getSharedPreferences(PREFS, MODE_PRIVATE)
+            startMs = p.getFloat(K_TTS_START, startMs.toFloat()).toDouble()
+            msPerUnit = p.getFloat(K_TTS_PACE, msPerUnit.toFloat()).toDouble()
+        }
         speeding = SpeedingWatcher(Database.penalties(this))
         busLanes = BusLaneWatcher(runCatching { Database.busLanes(this) }.getOrDefault(emptyList()))
         average = AverageSpeedWatcher(runCatching { Database.sections(this) }.getOrDefault(emptyList()))
@@ -238,8 +254,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         // isSpeaking is not reliable on every engine (false for a moment after speak(), or stuck):
         // the end of each sentence is taken from the engine's own callbacks, with [MAX_TALK_MS] as a cap.
         tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(id: String?) {}
-            override fun onDone(id: String?) = ended(id)
+            override fun onStart(id: String?) { if (id == talkingId) startedAt = System.currentTimeMillis() }
+            override fun onDone(id: String?) { learnTiming(id); ended(id) }
             @Deprecated("API 21") override fun onError(id: String?) { main.post { if (id == talkingId) failed(talkingText) } }
             override fun onError(id: String?, code: Int) { main.post { if (id == talkingId) failed(talkingText) } }
             override fun onStop(id: String?, interrupted: Boolean) = ended(id)
@@ -260,6 +276,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         }
         val lat = loc.latitude; val lon = loc.longitude
         // Speeding without a camera is checked only when no camera alert is due.
+        timing.fixAgeMs = ((SystemClock.elapsedRealtimeNanos() - loc.elapsedRealtimeNanos) / 1_000_000).coerceIn(0, 5000)
         val camera = watcher.onLocation(lat, lon, speedKmh, heading)
         // The pass sound at the camera itself, timed from the fix's age (user request 2026-11-02).
         watcher.passAt?.let { (_, ms) ->
@@ -510,6 +527,8 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         private const val BEEPS_ONLY_PAUSE_MS = 4000L
         const val PREFS = "settings"
         const val K_BEEPS_ONLY = "beeps_only"
+        private const val K_TTS_START = "tts_start_ms"
+        private const val K_TTS_PACE = "tts_ms_per_unit"
         /** Beeps without the sentence (switch on the main screen). */
         @Volatile var beepsOnly = false
 

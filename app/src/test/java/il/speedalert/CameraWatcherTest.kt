@@ -30,6 +30,25 @@ class CameraWatcherTest {
         return alerts
     }
 
+    @Test fun distanceIsTheOneLeftWhenHeard() {
+        // 108 km/h = 30 m/s; fix 500 ms old, 3 beeps of 300 ms, engine start 400 ms, 75 ms per unit:
+        // the opening "מצלמת מהירות בעוד " (18 units) is over after 0.5+0.9+0.4+1.35 = 3.15 s, 94.5 m on.
+        val w = watcher(cam).apply { timing = SpeechTiming(400.0, 75.0, 300).apply { fixAgeMs = 500 } }
+        assertEquals("מצלמת מהירות בעוד 410 מטר. מהירות נוכחית 108. מותרת 90. הוֹרֵד 18 קילומטר לשעה. קנס 250 שקלים.",
+            w.message(cam, 500.0, 108.0))
+        // Near the camera the full sentence would end after it: the fine and then the speed go.
+        val short = w.message(cam, 200.0, 108.0)
+        assertTrue(short, short.startsWith("מצלמת מהירות בעוד 110 מטר.") && !short.contains("קנס"))
+        assertEquals("מצלמת מהירות בעוד 10 מטר. מותרת 90. הוֹרֵד 18 קילומטר לשעה.", w.message(cam, 60.0, 108.0))
+    }
+
+    @Test fun timingLearnsFromSpokenSentences() {
+        val t = SpeechTiming(400.0, 75.0)
+        repeat(30) { t.learn("מצלמת מהירות בעוד 300 מטר.", 1000, 3000) }
+        assertEquals(1000.0, t.startMs, 1.0)
+        assertEquals(3000.0 / SpeechTiming.units("מצלמת מהירות בעוד 300 מטר."), t.msPerUnit, 0.5)
+    }
+
     @Test fun alertsWithCurrentSpeedFrom500MetresUntilPassed() {
         // Fixes every 11 m from 556 m before the camera: every fix inside 500 m speaks until it is passed.
         val alerts = drive(watcher(cam), 32.0000, 32.0120, 120.0)

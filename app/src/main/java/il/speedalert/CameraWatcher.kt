@@ -34,6 +34,12 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
     @Volatile private var penalties: Penalties = penalties
     private val states = mutableMapOf<Long, State>()
 
+    /**
+     * Speech timing (set by the service; null in tests): the distance is the one expected when it
+     * is heard, and a sentence that would end after the camera is shortened.
+     */
+    @Volatile var timing: SpeechTiming? = null
+
     /** Distance to the nearest camera at the last fix, metres. */
     var nearestM = Double.MAX_VALUE
         private set
@@ -90,7 +96,7 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         all.filter { c -> dist.getValue(c.id) <= range(c) &&
                 states[c.id]?.let { it.announced && !it.passed } == true }
             .minByOrNull { dist.getValue(it.id) }
-            ?.let { return Alert(message(it, dist.getValue(it.id), speedKmh), repeat = true, key = "$KEY${it.id}") }
+            ?.let { return Alert(message(it, dist.getValue(it.id), speedKmh, beeps = 1), repeat = true, key = "$KEY${it.id}") }
 
         if (heading == null || !moving) return null
         val announced = all.filter { states[it.id]?.announced == true }
@@ -119,18 +125,40 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         return diff <= 60 || diff >= 120
     }
 
-    fun message(cam: Camera, dist: Double, speedKmh: Double): String {
-        val metres = (Math.round(dist / 10.0) * 10).toInt()
+    /**
+     * The sentence for [cam] at [dist] metres, said after [beeps] beeps. With [timing], the distance
+     * is the one left when the number is heard, and the longest form that ends before the camera
+     * is chosen (the fine goes first, then the current speed).
+     */
+    fun message(cam: Camera, dist: Double, speedKmh: Double, beeps: Int = EventBeeps.FIRST): String {
+        val t = timing
+        val mps = speedKmh / 3.6
+        fun leftAfter(before: String) = if (t == null) dist else dist - mps * t.until(before, beeps) / 1000
+        val opening = if (cam.kind == Camera.Kind.RED_LIGHT) "מצלמת רמזור בעוד " else "מצלמת מהירות בעוד "
+        val heard = leftAfter(opening)
+        val metres = if (t == null) (Math.round(dist / 10.0) * 10).toInt()
+                     else (Math.round(heard / 10.0) * 10).toInt().coerceAtLeast(10)
+        val head = "$opening$metres מטר."
+        val forms = mutableListOf<String>()
         if (cam.kind == Camera.Kind.RED_LIGHT) {
             val ok = cam.limit?.let { speedKmh <= it } == true
-            return "מצלמת רמזור בעוד $metres מטר." + if (ok) " $OK" else ""
+            forms += head + if (ok) " $OK" else ""
+            forms += head
+        } else {
+            val shown = speedKmh.roundToInt()
+            val now = " מהירות נוכחית $shown."
+            val limit = cam.limit
+            if (limit == null) { forms += head + now; forms += head }
+            else {
+                val over = shown - limit   // from the speed as spoken (field report 2026-11-08)
+                val tail = if (over <= 0) " $OK" else " " + penalties.spoken(over, cam.urban)
+                val slow = if (over <= 0) " $OK" else " ${tail.trim().substringBefore('.')}."
+                forms += "$head$now מותרת $limit.$tail"
+                forms += "$head$now מותרת $limit.$slow"
+                forms += "$head מותרת $limit.$slow"
+            }
         }
-        val shown = speedKmh.roundToInt()
-        val head = "מצלמת מהירות בעוד $metres מטר. מהירות נוכחית $shown."
-        val limit = cam.limit ?: return head
-        val over = shown - limit   // from the speed as spoken (field report 2026-11-08)
-        if (over <= 0) return "$head מותרת $limit. $OK"
-        return "$head מותרת $limit. ${penalties.spoken(over, cam.urban)}"
+        return if (t == null) forms.first() else forms.firstOrNull { leftAfter(it) >= 0 } ?: forms.last()
     }
 
     companion object {
