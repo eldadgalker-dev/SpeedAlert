@@ -1,0 +1,70 @@
+{
+ "updated": "2026-11-10",
+ "source": "Ness Ziona municipality, https://www.nzc.org.il page 'אכיפת עבירות חנייה גם באמצעות מצלמות' (clarification 2026-06-04): fixed posts, 24/7, stopping and parking offences also with the driver in the car. Positions: the published address (addr:housenumber) or the junction of the two streets in OpenStreetMap (ODbL), via Overpass, 2026-11-10. Mobile cameras (Malibu, Science Park) not included. Manual update.",
+ "hours": "24/7",
+ "cameras": [
+  {
+   "name": "רחוב ויצמן 16",
+   "city": "נס ציונה",
+   "lat": 31.9274269,
+   "lon": 34.7983214,
+   "by": "address"
+  },
+  {
+   "name": "רחוב ויצמן 33",
+   "city": "נס ציונה",
+   "lat": 31.9279824,
+   "lon": 34.7981429,
+   "by": "address"
+  },
+  {
+   "name": "צומת אהרן בוקסר ומנחם בגין",
+   "city": "נס ציונה",
+   "lat": 31.92538,
+   "lon": 34.78205,
+   "by": "junction"
+  },
+  {
+   "name": "צומת האירוסים והשריון",
+   "city": "נס ציונה",
+   "lat": 31.931,
+   "lon": 34.79815,
+   "by": "junction"
+  },
+  {
+   "name": "רחוב השייטת 3",
+   "city": "נס ציונה",
+   "lat": 31.9302628,
+   "lon": 34.7925417,
+   "by": "address"
+  },
+  {
+   "name": "רחוב משה לרר 1",
+   "city": "נס ציונה",
+   "lat": 31.9299867,
+   "lon": 34.7872769,
+   "by": "address"
+  },
+  {
+   "name": "צומת האלופים והנבחרת",
+   "city": "נס ציונה",
+   "lat": 31.9160871,
+   "lon": 34.7787225,
+   "by": "junction"
+  },
+  {
+   "name": "צומת האלופים ואבנר בן יהודה",
+   "city": "נס ציונה",
+   "lat": 31.91469,
+   "lon": 34.7789,
+   "by": "junction"
+  },
+  {
+   "name": "צומת הנבחרת והספורט",
+   "city": "נס ציונה",
+   "lat": 31.91623,
+   "lon": 34.77598,
+   "by": "junction"
+  }
+ ]
+}

@@ -83,6 +83,7 @@ object Database {
     const val PENALTIES = "penalties.json"
     const val BUS_LANES = "buslanes.json"
     const val SECTIONS = "sections.json"
+    const val PARKING = "parking.json"
 
     fun cameras(ctx: Context): List<Camera> = parseCameras(read(ctx, CAMERAS))
 
@@ -90,6 +91,16 @@ object Database {
 
     fun busLanes(ctx: Context): List<BusLane> = parseBusLanes(read(ctx, BUS_LANES))
 
+
+    fun parking(ctx: Context): List<ParkingCamera> = parseParking(read(ctx, PARKING))
+
+    fun parseParking(json: String): List<ParkingCamera> {
+        val a = JSONObject(json).getJSONArray("cameras")
+        return (0 until a.length()).map { i ->
+            val o = a.getJSONObject(i)
+            ParkingCamera(o.getString("name"), o.optString("city"), o.getDouble("lat"), o.getDouble("lon"))
+        }.onEach { require(it.lat in 29.0..34.0 && it.lon in 34.0..36.0) { "bad position ${it.name}" } }
+    }
 
     fun sections(ctx: Context): List<AverageSection> = parseSections(read(ctx, SECTIONS))
 

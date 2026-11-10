@@ -50,7 +50,7 @@ object DataUpdate {
     fun run(ctx: Context): Changed {
         var changed = false
         var roadsChanged = false
-        for (name in listOf(Database.CAMERAS, Database.PENALTIES, Database.BUS_LANES, Database.SECTIONS)) {
+        for (name in listOf(Database.CAMERAS, Database.PENALTIES, Database.BUS_LANES, Database.SECTIONS, Database.PARKING)) {
             val text = Http.text("${BuildConfig.DATA_URL}/$name")
             validate(name, text)
             if (text == Database.read(ctx, name)) continue
@@ -89,6 +89,7 @@ object DataUpdate {
             }
             Database.BUS_LANES -> require(Database.parseBusLanes(text).isNotEmpty()) { "no bus lanes" }
             Database.SECTIONS -> Database.parseSections(text)
+            Database.PARKING -> require(Database.parseParking(text).isNotEmpty()) { "no parking cameras" }
             RoadTiles.INDEX -> require(RoadTiles.parseIndex(text).size >= MIN_ROAD_TILES) { "too few road tiles" }
         }
     }

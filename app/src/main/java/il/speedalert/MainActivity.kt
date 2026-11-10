@@ -686,6 +686,7 @@ class MainActivity : Activity() {
             "קנסות ונקודות" to Database.PENALTIES,
             "נתיבי תחבורה ציבורית" to Database.BUS_LANES,
             "קטעי מהירות ממוצעת" to Database.SECTIONS,
+            "מצלמות חנייה" to Database.PARKING,
         )
         private const val K_CHECKED = "בדיקה אחרונה מול השרת"
         private const val FRESH_MS = 24 * 3600_000L

@@ -59,13 +59,16 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 - Urban bus lanes with enforcement cameras (data.gov.il): once at the start of the lane, only along its
   direction (start to end) and only in its hours (Sun-Thu, Friday, Saturday windows; holidays not marked);
   consecutive segments of one street are announced once: "מצלמת אכיפה בנתיב התחבורה הציבורית בהרצל. אסור לנסוע בנתיב."
+- Parking-enforcement cameras (Ness Ziona, 9 fixed posts, data/parking.json, manual): once the car has
+  stood (under 5 km/h) for 8 s within 40 m of a post: "מצלמת אכיפת חנייה ברחוב ויצמן 16. אסור לעצור ולחנות כאן, גם כשהנהג ברכב."
+  Driving past is silent; armed again 200 m away. Positions from the city's addresses and junctions via OSM.
 - Speeding without a camera: 30 km/h or more above the limit of the road under the car
   (3 fixes in a row), repeated until the speed is back at or under the limit: "חריגת מהירות. מהירות נוכחית 82. מותרת 50. ..."
 - Audio: alarm stream (plays in silent and vibrate mode), unmuted and set to maximum together
   with the media stream for as long as an alert is due, then restored; other audio is ducked.
   "Do not disturb" in total-silence mode blocks even alarms; the app shows a warning then.
-- Not covered: mobile police cameras (no public source), parking cameras (Tel Aviv publishes
-  street addresses only, no positions yet).
+- Not covered: mobile police cameras (no public source), parking cameras outside Ness Ziona (Tel Aviv
+  publishes street addresses only, no positions yet), Ness Ziona's mobile parking cameras.
 
 ## Updates
 
