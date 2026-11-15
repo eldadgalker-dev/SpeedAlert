@@ -10,7 +10,10 @@ import android.graphics.Matrix
 import android.graphics.PointF
 import android.graphics.drawable.GradientDrawable
 import android.hardware.camera2.CaptureRequest
+import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.util.Range
 import android.util.Size
@@ -38,6 +41,8 @@ import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import java.io.File
 import java.util.concurrent.Executors
 import kotlin.math.roundToInt
@@ -50,7 +55,8 @@ import kotlin.math.roundToInt
  * saves the sharpest frame. Everything runs on the phone; CameraX sends nothing.
  *
  * In: extra [EXTRA_PHOTO] (file to write). Out: RESULT_OK with [EXTRA_READ] (-1 when none),
- * [EXTRA_VOTES] and [EXTRA_FRAMES].
+ * [EXTRA_VOTES] and [EXTRA_FRAMES]; RESULT_CANCELED with [EXTRA_ERROR] when the photo failed
+ * (no extra when the user cancelled). No failure is silent (review 2026-11-14).
  */
 class SignCameraActivity : ComponentActivity() {
     private lateinit var preview: PreviewView
@@ -62,8 +68,11 @@ class SignCameraActivity : ComponentActivity() {
     @Volatile private var tap: PointF? = null          // 0..1 on the preview (same as the frame: one viewport)
     @Volatile private var burst: Burst? = null
     private var lastLive = 0L
+    private val main = Handler(Looper.getMainLooper())
 
+    /** Touched only on [exec], so a burst ends once: by its last frame or by the time limit. */
     private class Burst {
+        var done = false
         val reads = ArrayList<Int?>()
         var best: Bitmap? = null
         var bestSharp = -1.0
@@ -97,13 +106,21 @@ class SignCameraActivity : ComponentActivity() {
             addView(cancel, LinearLayout.LayoutParams(0, px(72), 1f).apply { marginEnd = px(10) })
             addView(shutter, LinearLayout.LayoutParams(0, px(72), 2.5f))
         }
-        setContentView(FrameLayout(this).apply {
+        val root = FrameLayout(this).apply {
             setBackgroundColor(Color.BLACK)
             addView(preview, FrameLayout.LayoutParams(-1, -1))
             addView(marker, FrameLayout.LayoutParams(px(MARK_DP), px(MARK_DP)))
             addView(status, FrameLayout.LayoutParams(-1, -2, Gravity.TOP))
             addView(bottom, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM))
-        })
+        }
+        setContentView(root)
+        // Android 15 draws edge to edge: keep the status line and the buttons clear of the
+        // status bar, the camera cutout and the navigation bar (their touch area is the system's).
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val b = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(b.left, b.top, b.right, b.bottom)
+            insets
+        }
         touch()
         if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) start()
         else requestPermissions(arrayOf(Manifest.permission.CAMERA), 1)
@@ -114,12 +131,18 @@ class SignCameraActivity : ComponentActivity() {
     override fun onRequestPermissionsResult(code: Int, perms: Array<String>, results: IntArray) {
         super.onRequestPermissionsResult(code, perms, results)
         if (results.firstOrNull() == PackageManager.PERMISSION_GRANTED) start()
-        else { setResult(RESULT_CANCELED); finish() }
+        else fail("אין הרשאת מצלמה. אשר אותה בהגדרות הטלפון: אפליקציות, SpeedAlert, הרשאות.")
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        main.removeCallbacksAndMessages(null)
         exec.shutdown()
+    }
+
+    /** Closes the screen with the reason, which the main screen shows. */
+    private fun fail(reason: String) {
+        setResult(RESULT_CANCELED, Intent().putExtra(EXTRA_ERROR, reason)); finish()
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -156,40 +179,55 @@ class SignCameraActivity : ComponentActivity() {
     }
 
     private fun shoot() {
-        if (burst != null || camera == null) return
-        burst = Burst(); shutter.text = "מצלם…"; shutter.isEnabled = false
+        if (burst != null) return
+        if (camera == null) { status.text = "המצלמה עדיין לא מוכנה"; return }
+        val b = Burst()
+        burst = b; shutter.text = "מצלם…"; shutter.isEnabled = false
+        // The burst never hangs: after [BURST_MS] it ends with the frames it has.
+        main.postDelayed({ runCatching { exec.execute { finishBurst(b) } } }, BURST_MS)
     }
 
     private fun start() {
         val f = ProcessCameraProvider.getInstance(this)
-        f.addListener({ preview.post { bind(f.get()) } }, ContextCompat.getMainExecutor(this))
+        f.addListener({
+            preview.post {
+                try { bind(f.get()) } catch (e: Throwable) { status.text = "המצלמה לא נפתחה: ${e.message ?: e.javaClass.simpleName}" }
+            }
+        }, ContextCompat.getMainExecutor(this))
     }
 
     @androidx.annotation.OptIn(ExperimentalCamera2Interop::class)
     private fun bind(provider: ProcessCameraProvider) {
         if (isFinishing || isDestroyed) return
-        val prev = Preview.Builder().build().also { it.surfaceProvider = preview.surfaceProvider }
-        val ab = ImageAnalysis.Builder()
-            .setResolutionSelector(ResolutionSelector.Builder().setResolutionStrategy(
-                ResolutionStrategy(Size(1920, 1440), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)).build())
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
-        // 30 frames a second at least: exposure at most 1/30 s, less blur from the moving car.
-        Camera2Interop.Extender(ab).setCaptureRequestOption(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range(30, 30))
-        val analysis = ab.build().also { it.setAnalyzer(exec, ::analyze) }
-        val group = UseCaseGroup.Builder().addUseCase(prev).addUseCase(analysis)
-        preview.viewPort?.let { group.setViewPort(it) }
-        try {
-            provider.unbindAll()
-            camera = provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, group.build())
-        } catch (e: Exception) {
-            status.text = "המצלמה לא נפתחה: ${e.message}"
+        // A camera that refuses the fixed frame rate is opened again without it.
+        var error: Throwable? = null
+        for (fixedRate in listOf(true, false)) {
+            try {
+                val prev = Preview.Builder().build().also { it.surfaceProvider = preview.surfaceProvider }
+                val ab = ImageAnalysis.Builder()
+                    .setResolutionSelector(ResolutionSelector.Builder().setResolutionStrategy(
+                        ResolutionStrategy(Size(1920, 1440), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)).build())
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                // 30 frames a second at least: exposure at most 1/30 s, less blur from the moving car.
+                if (fixedRate) Camera2Interop.Extender(ab)
+                    .setCaptureRequestOption(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range(30, 30))
+                val analysis = ab.build().also { it.setAnalyzer(exec, ::analyze) }
+                val group = UseCaseGroup.Builder().addUseCase(prev).addUseCase(analysis)
+                preview.viewPort?.let { group.setViewPort(it) }
+                provider.unbindAll()
+                camera = provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, group.build())
+                return
+            } catch (e: Throwable) {
+                error = e
+            }
         }
+        status.text = "המצלמה לא נפתחה: ${error?.message ?: error?.javaClass?.simpleName}"
     }
 
     private fun analyze(img: ImageProxy) {
+        val b = burst
         try {
-            val b = burst
             val now = SystemClock.elapsedRealtime()
             if (b == null && now - lastLive < LIVE_MS) return
             val frame = upright(img)
@@ -200,15 +238,19 @@ class SignCameraActivity : ComponentActivity() {
                 runOnUiThread { status.text = if (read != null) "זוהה: $read. שתי נגיעות בעיגול לצילום" else "לא זוהה שלט. גע בשלט או הגדל" }
                 return
             }
+            if (b.done) return
+            // The frame is kept before anything else can fail: a burst with one frame still saves a photo.
+            if (b.best == null) b.best = frame
             val sharp = SignFrames.sharpness(small)
             b.reads += read
             if (sharp > b.bestSharp) { b.bestSharp = sharp; b.best = frame }
-            if (b.reads.size >= BURST) { burst = null; finishBurst(b) }
-        } catch (e: Exception) {
-            runOnUiThread { status.text = "שגיאה בניתוח התמונה: ${e.message}" }
+        } catch (e: Throwable) {   // also OutOfMemoryError: the screen stays usable and says why
+            if (b != null && !b.done) b.reads += null
+            runOnUiThread { status.text = "שגיאה בניתוח התמונה: ${e.message ?: e.javaClass.simpleName}" }
         } finally {
             img.close()
         }
+        if (b != null && !b.done && b.reads.size >= BURST) finishBurst(b)
     }
 
     /** The frame as shown: the viewport's crop, turned upright. */
@@ -220,12 +262,27 @@ class SignCameraActivity : ComponentActivity() {
         return Bitmap.createBitmap(raw, r.left, r.top, r.width(), r.height(), m, true).also { if (it !== raw) raw.recycle() }
     }
 
+    /** Runs on [exec], once per burst: after its last frame, or when its time is up. */
     private fun finishBurst(b: Burst) {
+        if (b.done) return
+        b.done = true
+        if (burst === b) burst = null
+        val best = b.best
+        if (best == null) {   // no frame arrived in time: stay on the screen, let the user try again
+            runOnUiThread {
+                status.text = "לא התקבלה תמונה מהמצלמה. נסה שוב."
+                shutter.text = "צלם שלט"; shutter.isEnabled = true
+            }
+            return
+        }
         val (value, votes) = SignFrames.vote(b.reads)
-        val photo = File(intent.getStringExtra(EXTRA_PHOTO) ?: return)
-        runCatching { photo.outputStream().use { b.best?.compress(Bitmap.CompressFormat.JPEG, 92, it) } }
+        val path = intent.getStringExtra(EXTRA_PHOTO)
+        val saved = path != null && runCatching {
+            File(path).outputStream().use { best.compress(Bitmap.CompressFormat.JPEG, 92, it) }
+        }.getOrDefault(false)
         runOnUiThread {
-            setResult(RESULT_OK, intent.putExtra(EXTRA_READ, value ?: -1).putExtra(EXTRA_VOTES, votes)
+            if (!saved) return@runOnUiThread fail("התמונה לא נשמרה בטלפון.")
+            setResult(RESULT_OK, Intent().putExtra(EXTRA_READ, value ?: -1).putExtra(EXTRA_VOTES, votes)
                 .putExtra(EXTRA_FRAMES, b.reads.size))
             finish()
         }
@@ -236,7 +293,10 @@ class SignCameraActivity : ComponentActivity() {
         const val EXTRA_READ = "read"
         const val EXTRA_VOTES = "votes"
         const val EXTRA_FRAMES = "frames"
+        const val EXTRA_ERROR = "error"
         const val BURST = 12
+        /** Longest burst: a stalled camera must not hold the screen. */
+        const val BURST_MS = 5000L
         private const val LIVE_MS = 350L
         private const val MARK_DP = 140
     }

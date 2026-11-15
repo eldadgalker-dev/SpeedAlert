@@ -50,13 +50,21 @@ object DataUpdate {
     fun run(ctx: Context): Changed {
         var changed = false
         var roadsChanged = false
+        var failed = false
         for (name in listOf(Database.CAMERAS, Database.PENALTIES, Database.BUS_LANES, Database.SECTIONS, Database.PARKING)) {
-            val text = Http.text("${BuildConfig.DATA_URL}/$name")
-            validate(name, text)
-            if (text == Database.read(ctx, name)) continue
-            save(ctx, name, text)
-            changed = true
+            // Each table by itself (review 2026-11-14): one that fails must not hide the ones
+            // already saved, else the service keeps the old tables in memory until it restarts.
+            try {
+                val text = Http.text("${BuildConfig.DATA_URL}/$name")
+                validate(name, text)
+                if (text == Database.read(ctx, name)) continue
+                save(ctx, name, text)
+                changed = true
+            } catch (e: Exception) {
+                failed = true
+            }
         }
+        if (failed) return Changed(changed, false)   // not a full check: the time of the last check stays
         val index = Http.text("${BuildConfig.DATA_URL}/${RoadTiles.INDEX}")
         validate(RoadTiles.INDEX, index)
         if (index != Database.read(ctx, RoadTiles.INDEX)) {

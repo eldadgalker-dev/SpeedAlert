@@ -232,13 +232,14 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         instance = null
         main.removeCallbacks(dataCheck)
         main.removeCallbacks(logTick)
+        main.removeCallbacksAndMessages(PASS); main.removeCallbacksAndMessages(VOICE)
         UsageLog.sample(this, gpsMs(), savingMs(), motionSensor, if (saving) "saving" else "active")
         UsageLog.event(this, "stop", gpsMs(), savingMs())
         if (recognition) runCatching { ActivityRecognition.getClient(this).removeActivityTransitionUpdates(activityIntent) }
         fused.removeLocationUpdates(callback)
         motion?.let { sensors.cancelTriggerSensor(trigger, it) }
         markMode(null)
-        tts.shutdown()
+        if (::tts.isInitialized) runCatching { tts.shutdown() }
         restoreVolume()
         running = false
         speed = -1.0

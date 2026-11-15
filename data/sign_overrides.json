@@ -1,0 +1,26 @@
+[
+ {
+  "lat": 32.05781,
+  "lon": 34.78542,
+  "heading": 195,
+  "limit": 80,
+  "max_m": 3000,
+  "road": "Ayalon South (20)",
+  "osm_was": 90,
+  "photo": "PXL_20261112_114455946",
+  "date": "2026-11-12",
+  "note": "Sign 80 with the motorway sign; sign position estimated about 60 m ahead of the photo's GPS fix."
+ },
+ {
+  "lat": 32.03806,
+  "lon": 34.79316,
+  "heading": 128,
+  "limit": 100,
+  "max_m": 3000,
+  "road": "Road 1 to Jerusalem",
+  "osm_was": 70,
+  "photo": "PXL_20261112_114710686, PXL_20261112_114711828",
+  "date": "2026-11-12",
+  "note": "Sign 100 after the bridge; sign position estimated about 120 m ahead of the photo's GPS fix."
+ }
+]

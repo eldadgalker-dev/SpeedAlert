@@ -11,6 +11,7 @@ on:
     paths:
       - "tools/fetch_roads.py"
       - "tools/tile_roads.py"
+      - "data/sign_overrides.json"
       - ".github/workflows/roads.yml"
   workflow_dispatch:
 

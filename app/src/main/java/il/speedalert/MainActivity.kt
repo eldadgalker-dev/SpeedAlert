@@ -72,6 +72,7 @@ class MainActivity : Activity() {
         AlertService.beepsOnly = getSharedPreferences(AlertService.PREFS, MODE_PRIVATE).getBoolean(AlertService.K_BEEPS_ONLY, false)
         super.onCreate(savedInstanceState)
         savedInstanceState?.getString(K_SIGN_PHOTO)?.let { signPhoto = File(it) }   // the camera may have closed the app
+        @Suppress("DEPRECATION") savedInstanceState?.getParcelable<Location>(K_SIGN_FIX)?.let { signFix = it }
         val dark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         pal = if (dark) Palette(0xFF121212.toInt(), 0xFF1E1E1E.toInt(), 0xFFECECEC.toInt(), 0xFFA0A0A0.toInt(), 0xFF333333.toInt())
               else Palette(0xFFF2F2F5.toInt(), Color.WHITE, 0xFF1D1D1F.toInt(), 0xFF5F6368.toInt(), 0xFFE0E0E0.toInt())
@@ -317,6 +318,7 @@ class MainActivity : Activity() {
     override fun onSaveInstanceState(out: Bundle) {
         super.onSaveInstanceState(out)
         signPhoto?.let { out.putString(K_SIGN_PHOTO, it.path) }
+        signFix?.let { out.putParcelable(K_SIGN_FIX, it) }   // else the sign is saved without a place
     }
 
     private var signPhoto: File? = null
@@ -354,7 +356,13 @@ class MainActivity : Activity() {
         if (requestCode != REQ_SIGN) return
         val fix = signFix
         val photo = signPhoto ?: return stopSignFixes()
-        if (resultCode != RESULT_OK || !photo.exists() || photo.length() == 0L) { stopSignFixes(); photo.delete(); return }
+        if (resultCode != RESULT_OK || !photo.exists() || photo.length() == 0L) {
+            // Never silent (review 2026-11-14): the camera screen gives the reason; a plain cancel has none.
+            val why = data?.getStringExtra(SignCameraActivity.EXTRA_ERROR)
+                ?: if (resultCode == RESULT_OK) "הצילום לא נשמר. נסה שוב." else null
+            why?.let { android.widget.Toast.makeText(this, it, android.widget.Toast.LENGTH_LONG).show() }
+            stopSignFixes(); photo.delete(); return
+        }
         val roads = signRoads ?: RoadTiles(this)
         Thread {
             val small = runCatching { SignLog.prepare(photo) }.getOrNull()
@@ -679,6 +687,7 @@ class MainActivity : Activity() {
         private const val REQ_SIGN = 7
         private const val GOOD_FIX_M = 20f
         private const val K_SIGN_PHOTO = "sign_photo"
+        private const val K_SIGN_FIX = "sign_fix"
         private const val MAX_SHARED_PHOTOS = 50
         private val DATA_ROWS = linkedMapOf(
             "מצלמות" to Database.CAMERAS,

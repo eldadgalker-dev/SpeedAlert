@@ -29,7 +29,12 @@ object SignReader {
         val all = components(red, w, 0, 0, w - 1, h - 1)
         trace?.invoke("red shapes ${all.size}, big: " + all.filter { it.w >= minSide && it.h >= minSide }
             .joinToString { "${it.x0},${it.y0} ${it.w}x${it.h} fill=${"%.2f".format(it.count.toDouble() / (it.w * it.h))} hollow=${hollow(red, w, it)}" })
-        val rings = all
+        // Two signs on one pole (a limit above "no overtaking") touch and form one tall red shape:
+        // its upper and lower squares are tried as rings too (photo of 2026-11-12, "70" on road 1).
+        val stacked = all.filter { it.w >= minSide && it.h * 10 >= it.w * 16 && it.h <= it.w * 3 }.flatMap { b ->
+            listOf(b.y0, b.y1 - b.w + 1).map { y -> Box(b.x0, y, b.x1, y + b.w - 1, (y until y + b.w).sumOf { yy -> (b.x0..b.x1).count { red[yy * w + it] } }) }
+        }
+        val rings = (all + stacked)
             .filter { b ->
                 b.w >= minSide && b.h >= minSide && b.w.toDouble() / b.h in 0.6..1.6 &&
                     b.count.toDouble() / (b.w * b.h) in 0.12..0.65 && hollow(red, w, b)
@@ -47,7 +52,10 @@ object SignReader {
 
     private fun isRed(c: Int): Boolean {
         val r = (c shr 16) and 255; val g = (c shr 8) and 255; val b = c and 255
-        return r >= 90 && r > g * 3 / 2 && r > b * 7 / 5
+        // Real signs outdoors are far from pure red: a ring in shade or against the sun is a dull maroon
+        // such as (73,49,62), a blurred one a pink such as (141,103,102) (photos of 2026-11-12, all unread
+        // with the earlier rule r >= 90, r > 1.5 g, r > 1.4 b). Red leads green clearly; blue may reach red.
+        return r >= 45 && r - g >= maxOf(12, r * 15 / 100) && b <= r + 4
     }
 
     private fun lum(c: Int) = (((c shr 16) and 255) * 299 + ((c shr 8) and 255) * 587 + (c and 255) * 114) / 1000
