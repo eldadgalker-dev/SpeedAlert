@@ -36,4 +36,27 @@ class VersionScheduleTest {
         assertFalse(VersionSchedule.due(5, 0, false, VersionSchedule.ACTIVE_MS, false))
         assertFalse(VersionSchedule.due(1000 * min, 1, true, VersionSchedule.ACTIVE_MS, false))
     }
+
+    @Test fun updateIsSaidAtTheStartOfEveryDrive() {
+        val n = UpdateNotice()
+        val min = 60_000L
+        assertTrue(n.onFix(false, 1000, true) == null)                 // standing: no drive yet
+        val a = n.onFix(true, 2000, true)
+        assertTrue(n.started)
+        assertTrue(a?.text == UpdateNotice.TEXT && a.repeat == false)
+        assertTrue(n.onFix(true, 3000, true) == null)                  // once per drive
+        assertFalse(n.started)
+        assertTrue(n.onFix(true, 5 * min, true) == null)               // same drive (stops shorter than 10 minutes)
+        assertTrue(n.onFix(true, 20 * min, true) != null)              // a new drive after a pause: said again
+    }
+
+    @Test fun anAnswerThatComesSoonAfterTheStartIsStillSaid() {
+        val n = UpdateNotice()
+        assertTrue(n.onFix(true, 1000, false) == null)                 // started, the answer not in yet
+        assertTrue(n.onFix(true, 30_000, true) != null)                // in 30 s later
+        val m = UpdateNotice()
+        m.onFix(true, 1000, false)
+        assertTrue(m.onFix(true, 1000 + UpdateNotice.WINDOW_MS + 1, true) == null)   // too late in the drive
+        assertTrue(UpdateNotice().onFix(true, 1000, false) == null)    // no newer version: nothing
+    }
 }

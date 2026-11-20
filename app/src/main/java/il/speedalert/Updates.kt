@@ -33,6 +33,41 @@ object Http {
     }
 }
 
+/**
+ * Says "יש לעדכן גרסה" once at the start of every drive while a newer version is out (user request
+ * 2026-11-20: "בהתחלת נסיעה בדוק אם יש עדכון תוכנה והשמע בקול התראה"). A drive starts at the first
+ * fix at driving speed after [PAUSE_MS] without one; [started] is true on that fix, so the service
+ * asks for the version at once. The answer may come a moment later: it is said if it comes within
+ * [WINDOW_MS] of the start.
+ */
+class UpdateNotice {
+    private var lastDriving = 0L
+    private var startedAt = 0L
+    private var said = false
+
+    /** True on the fix that started a drive. */
+    var started = false
+        private set
+
+    fun onFix(driving: Boolean, nowMs: Long, updateOut: Boolean): Alert? {
+        started = false
+        if (driving) {
+            if (lastDriving == 0L || nowMs - lastDriving > PAUSE_MS) { startedAt = nowMs; said = false; started = true }
+            lastDriving = nowMs
+        }
+        if (said || startedAt == 0L || nowMs - startedAt > WINDOW_MS || !updateOut) return null
+        said = true
+        return Alert(TEXT, repeat = false, key = KEY)
+    }
+
+    companion object {
+        const val TEXT = "יש לעדכן גרסה."
+        const val KEY = "update"
+        const val PAUSE_MS = 10 * 60_000L
+        const val WINDOW_MS = 2 * 60_000L
+    }
+}
+
 /** When the app asks whether a newer version is out (pure, unit tested). */
 object VersionSchedule {
     /** On the screen, and in the service while driving: version.json is about 150 bytes. */

@@ -51,6 +51,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
     private lateinit var watcher: CameraWatcher
     private lateinit var speeding: SpeedingWatcher
     private val limits = LimitWatcher()
+    private val updateNotice = UpdateNotice()
     private lateinit var busLanes: BusLaneWatcher
     private lateinit var average: AverageSpeedWatcher
     private lateinit var parking: ParkingWatcher
@@ -302,6 +303,10 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
             else -> 0.0
         }
         if (powerSaving(loc, speedKmh)) return
+        // A newer version is said at the start of every drive (user request 2026-11-20); the start asks for it at once.
+        updateNotice.onFix(speedKmh >= DRIVING_KMH, System.currentTimeMillis(), AppUpdate.available != null)
+            ?.let { once.addLast(it) }
+        if (updateNotice.started) AppUpdate.poll(this, VersionSchedule.RESUME_MS) { main.post { if (running) notifyVersion(it) } }
         val heading = if (loc.hasBearing() && speedKmh >= CameraWatcher.MIN_SPEED_KMH) loc.bearing.toDouble() else null
         speed = speedKmh
         status = when {

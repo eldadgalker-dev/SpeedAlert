@@ -89,7 +89,9 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 - **App:** `.github/workflows/release.yml` builds a signed APK on every app change to `main` and
   publishes Release `v<speed.versionBase>.<run>` with `SpeedAlert.apk` and `version.json`.
   The app checks `version.json` at every launch and every data check (30 min), shows a newer
-  version on the main screen and notifies once. The "בדוק עדכון" button downloads it, checks
+  version on the main screen and notifies once. At the start of every drive (first fix at
+  driving speed after 10 minutes without one) it asks again and, while a newer version is out,
+  says "יש לעדכן גרסה" with one beep. The "בדוק עדכון" button downloads it, checks
   SHA-256 and opens the installer.
   Needs repository secrets `SPEED_KEYSTORE_B64`, `SPEED_KEYSTORE_PASSWORD`, `SPEED_KEY_ALIAS`,
   `SPEED_KEY_PASSWORD` (keystore kept outside the repository).
