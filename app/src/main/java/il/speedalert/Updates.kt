@@ -33,6 +33,25 @@ object Http {
     }
 }
 
+/** When the app asks whether a newer version is out (pure, unit tested). */
+object VersionSchedule {
+    /** On the screen, and in the service while driving: version.json is about 150 bytes. */
+    const val ACTIVE_MS = 2 * 60_000L
+    /** The service while not driving (power saving): the radio is not woken more often than the data check. */
+    const val SAVING_MS = 30 * 60_000L
+    /** After a failed check. */
+    const val RETRY_MS = 60_000L
+    /** A return to the screen asks at once, but not twice in a row (permission screens). */
+    const val RESUME_MS = 5_000L
+
+    /** [lastAttempt] 0 = never asked. Never due without internet: the answer would be a failure. */
+    fun due(now: Long, lastAttempt: Long, lastFailed: Boolean, interval: Long, online: Boolean): Boolean {
+        if (!online) return false
+        if (lastAttempt == 0L) return true
+        return now - lastAttempt >= if (lastFailed) minOf(RETRY_MS, interval) else interval
+    }
+}
+
 /**
  * Keeps cameras.json / penalties.json current from GitHub (data/ on main, refreshed hourly
  * by .github/workflows/data.yml). The app checks at launch and every [INTERVAL_MS] while running.
@@ -112,8 +131,43 @@ data class RemoteVersion(val versionCode: Int, val versionName: String, val sha2
 object AppUpdate {
     const val APK = "SpeedAlert.apk"
 
-    /** Newer version found by the last check (at every launch and every data check; user request 2026-10-29). */
+    /** Newer version found by the last check (user request 2026-10-29). */
     @Volatile var available: RemoteVersion? = null
+
+    // One schedule for the screen and the service, so the two never ask twice (user request
+    // 2026-11-16: "עדכון גרסה צריך להיות פשוט ומהיר"). Times are SystemClock.elapsedRealtime().
+    @Volatile private var lastAttempt = 0L
+    @Volatile private var lastFailed = false
+    private val busy = java.util.concurrent.atomic.AtomicBoolean(false)
+
+    /**
+     * Asks for the version on a background thread when [VersionSchedule.due] says so; [found] gets
+     * a newer version on that thread. [interval] is how old the last good check may be.
+     */
+    fun poll(ctx: Context, interval: Long, found: (RemoteVersion) -> Unit) {
+        val now = android.os.SystemClock.elapsedRealtime()
+        // The clock first: the screen asks every second, the network state only when the time has come.
+        if (!VersionSchedule.due(now, lastAttempt, lastFailed, interval, true) || !online(ctx)) return
+        if (!busy.compareAndSet(false, true)) return
+        lastAttempt = now
+        Thread {
+            try {
+                val r = check()
+                lastFailed = false
+                if (r != null) found(r)
+            } catch (e: Exception) {
+                lastFailed = true   // asked again after [VersionSchedule.RETRY_MS], not after the full interval
+            } finally {
+                busy.set(false)
+            }
+        }.start()
+    }
+
+    /** False only when the phone says it has no internet; an error in the question counts as online. */
+    fun online(ctx: Context): Boolean = runCatching {
+        val cm = ctx.getSystemService(android.net.ConnectivityManager::class.java)
+        cm.getNetworkCapabilities(cm.activeNetwork)?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    }.getOrDefault(true)
 
     /** The remote version when newer than the installed one, else null. */
     fun check(): RemoteVersion? {

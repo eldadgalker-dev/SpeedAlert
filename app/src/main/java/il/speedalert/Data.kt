@@ -13,7 +13,8 @@ data class Camera(
     val urban: Boolean,
     val kind: Kind = Kind.SPEED,
 ) {
-    enum class Kind { SPEED, RED_LIGHT }
+    /** SPEED: a regular (spot) speed camera; AVERAGE: a camera of an average-speed section. */
+    enum class Kind { SPEED, RED_LIGHT, AVERAGE }
 }
 
 /**
@@ -146,7 +147,11 @@ object Database {
                 limit = if (c.isNull("limit")) null else c.getInt("limit"),
                 direction = if (c.isNull("direction")) null else c.getDouble("direction"),
                 urban = c.optBoolean("urban", false),
-                kind = if (c.optString("kind") == "red_light") Camera.Kind.RED_LIGHT else Camera.Kind.SPEED,
+                kind = when (c.optString("kind")) {
+                    "red_light" -> Camera.Kind.RED_LIGHT
+                    "average" -> Camera.Kind.AVERAGE
+                    else -> Camera.Kind.SPEED
+                },
             )
         }
     }

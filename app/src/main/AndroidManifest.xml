@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Only to skip the version check while the phone has no internet (no prompt, nothing is sent). -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Speed-sign photos in the app's own camera screen (SignCameraActivity). -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />

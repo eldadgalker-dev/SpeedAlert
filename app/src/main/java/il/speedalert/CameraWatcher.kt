@@ -116,7 +116,7 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         return Alert(message(candidate, d, speedKmh), repeat = true, key = "$KEY${candidate.id}")
     }
 
-    private fun range(c: Camera) = if (c.kind == Camera.Kind.SPEED) ALERT_M else RED_LIGHT_M
+    private fun range(c: Camera) = if (c.kind == Camera.Kind.RED_LIGHT) RED_LIGHT_M else ALERT_M
 
     private fun isAhead(c: Camera, lat: Double, lon: Double, heading: Double): Boolean {
         if (Geo.angleDiff(heading, Geo.bearing(lat, lon, c.lat, c.lon)) > AHEAD_DEG) return false
@@ -135,7 +135,12 @@ class CameraWatcher(cameras: List<Camera>, penalties: Penalties) {
         val t = timing
         val mps = speedKmh / 3.6
         fun leftAfter(before: String) = if (t == null) dist else dist - mps * t.until(before, beeps) / 1000
-        val opening = if (cam.kind == Camera.Kind.RED_LIGHT) "מצלמת רמזור בעוד " else "מצלמת מהירות בעוד "
+        // Regular or average camera (user request 2026-11-20: "יש לציין אם המצלמה היא מצלמה רגילה או מצלמת ממוצע").
+        val opening = when (cam.kind) {
+            Camera.Kind.RED_LIGHT -> "מצלמת רמזור בעוד "
+            Camera.Kind.AVERAGE -> "מצלמת ממוצע בעוד "
+            Camera.Kind.SPEED -> "מצלמה רגילה בעוד "
+        }
         val heard = leftAfter(opening)
         val metres = if (t == null) (Math.round(dist / 10.0) * 10).toInt()
                      else (Math.round(heard / 10.0) * 10).toInt().coerceAtLeast(10)

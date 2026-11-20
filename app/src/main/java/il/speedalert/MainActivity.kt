@@ -61,6 +61,7 @@ class MainActivity : Activity() {
     private val refresh = object : Runnable {
         override fun run() {
             render()
+            checkVersion(VersionSchedule.ACTIVE_MS)   // a version published while the app is open is seen within 2 minutes
             ui.postDelayed(this, 1000)
         }
     }
@@ -549,14 +550,8 @@ class MainActivity : Activity() {
      * Every time the app comes to the screen (user request 2026-11-02): asks for the version and,
      * when a newer one exists, offers it in a dialog instead of only a note in the version row.
      */
-    private fun checkVersion() {
-        val now = System.currentTimeMillis()
-        if (now - lastVersionCheck < 5_000) return   // two resumes in a row (permission screens)
-        lastVersionCheck = now
-        Thread {
-            val r = runCatching { AppUpdate.check() }.onFailure { lastVersionCheck = 0 }.getOrNull() ?: return@Thread
-            ui.post { offerUpdate(r) }
-        }.start()
+    private fun checkVersion(interval: Long) {
+        AppUpdate.poll(this, interval) { r -> ui.post { offerUpdate(r) } }
     }
 
     private var updateDialog: AlertDialog? = null
@@ -594,11 +589,13 @@ class MainActivity : Activity() {
 
     private fun offerUpdate(r: RemoteVersion) {
         if (isFinishing || isDestroyed || updating || updateDialog?.isShowing == true) return
+        // Declined in this run: not offered again by itself; the version row and "בדוק עדכון" still show it.
+        if (r.versionCode == declinedVersion) return
         updateDialog = AlertDialog.Builder(this)
             .setTitle("עדכון זמין")
             .setMessage("גרסה ${r.versionName} זמינה. מותקנת ${BuildConfig.VERSION_NAME}.")
             .setPositiveButton("עדכן") { _, _ -> checkAppUpdate() }
-            .setNegativeButton("לא עכשיו", null)
+            .setNegativeButton("לא עכשיו") { _, _ -> declinedVersion = r.versionCode }
             .show()
     }
 
@@ -632,7 +629,7 @@ class MainActivity : Activity() {
 
     override fun onResume() {
         super.onResume()
-        checkVersion()
+        checkVersion(VersionSchedule.RESUME_MS)
         ui.post(refresh)
     }
 
@@ -677,7 +674,7 @@ class MainActivity : Activity() {
     }
 
     companion object {
-        @Volatile private var lastVersionCheck = 0L
+        @Volatile private var declinedVersion = 0
         const val HELP_URL = "https://eldadgalker-dev.github.io/SpeedAlert/"
         private const val RED = 0xFFC62828.toInt()
         private const val GREEN = 0xFF2E7D32.toInt()

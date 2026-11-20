@@ -50,6 +50,7 @@ import java.util.Locale
 class AlertService : Service(), TextToSpeech.OnInitListener {
     private lateinit var watcher: CameraWatcher
     private lateinit var speeding: SpeedingWatcher
+    private val limits = LimitWatcher()
     private lateinit var busLanes: BusLaneWatcher
     private lateinit var average: AverageSpeedWatcher
     private lateinit var parking: ParkingWatcher
@@ -141,6 +142,9 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         parking = ParkingWatcher(runCatching { Database.parking(this) }.getOrDefault(emptyList()))
         roadTiles = RoadTiles(this)
         speeding.roads = roadTiles
+        speeding.timing = timing
+        limits.roads = roadTiles
+        limits.timing = timing
         beepsOnly = getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(K_BEEPS_ONLY, false)
         connectTts()
         startInForeground()
@@ -152,6 +156,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         startActivityRecognition()
         instance = this
         main.post(dataCheck)
+        main.post(versionCheck)
         UsageLog.event(this, "start", gpsMs(), savingMs())
         main.postDelayed(logTick, UsageLog.INTERVAL_MS)
     }
@@ -211,10 +216,23 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
                     dataInfo = "${cams.size} מצלמות"
                     dataNote = "עודכן, נתונים מ-${Database.fetched(this@AlertService)}"
                 }
-                runCatching { AppUpdate.check() }.getOrNull()?.let { main.post { notifyVersion(it) } }
                 } finally { checking.set(false) }
             }.start()
             main.postDelayed(this, DataUpdate.INTERVAL_MS)
+        }
+    }
+
+    /**
+     * The app version has a schedule of its own, apart from the heavier data check (user request
+     * 2026-11-16): every [VersionSchedule.ACTIVE_MS] while driving, [VersionSchedule.SAVING_MS]
+     * while saving power, sooner after a failure; [AppUpdate.poll] decides, this only asks it.
+     */
+    private val versionCheck = object : Runnable {
+        override fun run() {
+            AppUpdate.poll(this@AlertService, if (saving) VersionSchedule.SAVING_MS else VersionSchedule.ACTIVE_MS) {
+                main.post { if (running) notifyVersion(it) }
+            }
+            main.postDelayed(this, VersionSchedule.RETRY_MS)
         }
     }
 
@@ -232,6 +250,7 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
         instance = null
         main.removeCallbacks(dataCheck)
         main.removeCallbacks(logTick)
+        main.removeCallbacks(versionCheck)
         main.removeCallbacksAndMessages(PASS); main.removeCallbacksAndMessages(VOICE)
         UsageLog.sample(this, gpsMs(), savingMs(), motionSensor, if (saving) "saving" else "active")
         UsageLog.event(this, "stop", gpsMs(), savingMs())
@@ -299,7 +318,9 @@ class AlertService : Service(), TextToSpeech.OnInitListener {
             val age = (SystemClock.elapsedRealtimeNanos() - loc.elapsedRealtimeNanos) / 1_000_000
             HandlerCompat.postDelayed(main, { passSound() }, PASS, (ms - age).coerceAtLeast(0))
         }
-        val alerts = listOfNotNull(camera, busLanes.onLocation(lat, lon, speedKmh, heading),
+        // A change of the limit is said first, the alerts of this fix follow (user request 2026-11-20).
+        val alerts = listOfNotNull(limits.onLocation(lat, lon, speedKmh, heading),
+            camera, busLanes.onLocation(lat, lon, speedKmh, heading),
             average.onLocation(lat, lon, speedKmh, heading, loc.time),
             parking.onLocation(lat, lon, speedKmh, loc.time),
             if (camera?.repeat == true) null else speeding.onLocation(lat, lon, speedKmh, heading))

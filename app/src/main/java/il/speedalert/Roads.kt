@@ -132,44 +132,123 @@ private class IntList {
 }
 
 /**
+ * Where the car will be when the middle of a sentence is heard (user request 2026-11-20: "הוצא
+ * הודעות בהתאם למיקום הרכב הצפוי בעת השמעת אמצע ההודעה"): the road limit is taken there, so a
+ * sentence is not spoken for a limit the car has already left by the time it is heard.
+ */
+object Ahead {
+    /** The point [metres] ahead along [heading] (flat earth, fine for a few hundred metres). */
+    fun point(lat: Double, lon: Double, heading: Double, metres: Double): Pair<Double, Double> {
+        val h = Math.toRadians(heading)
+        val dLat = metres * kotlin.math.cos(h) / 110540.0
+        val dLon = metres * kotlin.math.sin(h) / (111320.0 * kotlin.math.cos(Math.toRadians(lat)))
+        return lat + dLat to lon + dLon
+    }
+
+    /**
+     * The road at the middle of [sample] spoken after [beeps] beeps, [extraMs] later still; the road
+     * under the car when there is no timing, no speed or no road there (a curve: straight ahead is off the road).
+     */
+    fun match(r: RoadLookup, timing: SpeechTiming?, lat: Double, lon: Double, speedKmh: Double, heading: Double,
+              sample: String, beeps: Int, extraMs: Long = 0): Roads.Match? {
+        val here = r.at(lat, lon, heading)
+        val t = timing ?: return here
+        val metres = speedKmh / 3.6 * (t.until(sample.take(sample.length / 2), beeps) + extraMs) / 1000
+        if (metres < MIN_M) return here
+        val (la, lo) = point(lat, lon, heading, metres)
+        return r.at(la, lo, heading) ?: here
+    }
+
+    const val MIN_M = 10.0
+}
+
+/**
  * Speaks without a camera when the speed is [OVER_KMH] or more above the limit of the road
  * (user request 2026-10-28). Starts after [CONFIRM] fixes in a row, then repeats without a break
  * while the speed is above the limit at all, until it is back at or under it (user requests
  * 2026-10-30 and 2026-11-02).
+ *
+ * Field report 2026-11-20 (the alert stopped in every curve and came back on the straight): a fix
+ * without a road match no longer ends the alert. It goes on without the limit ("חריגת מהירות.
+ * מהירות נוכחית X."), judged by the limit of the last match, until the speed is back at or under
+ * it and "מהירות תקינה" is said.
  */
 class SpeedingWatcher(@Volatile var penalties: Penalties) {
     @Volatile var roads: RoadLookup? = null
+    /** Speech timing (set by the service; null in tests): the limit is the one ahead, see [Ahead]. */
+    @Volatile var timing: SpeechTiming? = null
     private var streak = 0
     private var owed = false   // an alert was given; repeat it until back at or under the limit, then say so once
-    private var last: Roads.Match? = null   // road of the last alert
-    private var misses = 0
+    private var limit = 0      // limit of the last road match while [owed]
 
     fun onLocation(lat: Double, lon: Double, speedKmh: Double, heading: Double?): Alert? {
         val r = roads
-        val found = if (r == null || heading == null) null else r.at(lat, lon, heading)
-        // Field report 2026-11-08 (silence after the first alert until back under the limit): the
-        // road match drops out on single fixes (heading jitter, a ramp with an unknown limit beside
-        // the road); while an alert is owed the road of the last alert goes on for [HOLD_FIXES].
-        val m = found ?: last?.takeIf { owed && ++misses <= HOLD_FIXES } ?: run { streak = 0; return null }
-        if (found != null) { last = found; misses = 0 }
+        val found = if (r == null || heading == null) null
+            else Ahead.match(r, timing, lat, lon, speedKmh, heading, SAMPLE, if (owed) 1 else EventBeeps.FIRST)
         // From the speed as spoken, so that "נוכחית 90. מותרת 90." never comes with "הוֹרֵד 1" or "הוֹרֵד 0".
         val shown = speedKmh.roundToInt()
-        val over = shown - m.limit
         if (owed) {
-            if (over <= 0) { owed = false; streak = 0; last = null; return Alert("${CameraWatcher.OK} מותרת ${m.limit}.", repeat = false, key = KEY) }
-        } else {
-            if (over < OVER_KMH) { streak = 0; return null }
-            if (++streak < CONFIRM) return null
-            owed = true
+            if (found != null) limit = found.limit
+            val over = shown - limit
+            if (over <= 0) {
+                owed = false; streak = 0
+                return Alert(if (found != null) "${CameraWatcher.OK} מותרת $limit." else CameraWatcher.OK, repeat = false, key = KEY)
+            }
+            if (found == null) return Alert("חריגת מהירות. מהירות נוכחית $shown.", repeat = true, key = KEY)
+            return Alert(full(shown, found), repeat = true, key = KEY)
         }
-        return Alert("חריגת מהירות. מהירות נוכחית $shown. מותרת ${m.limit}. ${penalties.spoken(over, m.urban)}",
-            repeat = true, key = KEY)
+        val m = found ?: run { streak = 0; return null }
+        if (shown - m.limit < OVER_KMH) { streak = 0; return null }
+        if (++streak < CONFIRM) return null
+        owed = true
+        limit = m.limit
+        return Alert(full(shown, m), repeat = true, key = KEY)
     }
+
+    private fun full(shown: Int, m: Roads.Match) =
+        "חריגת מהירות. מהירות נוכחית $shown. מותרת ${m.limit}. ${penalties.spoken(shown - m.limit, m.urban)}"
 
     companion object {
         const val OVER_KMH = 30
         const val CONFIRM = 3
-        const val HOLD_FIXES = 15   // about 15 s at one fix a second
         const val KEY = "speeding"
+        /** A typical sentence, for its timing. */
+        const val SAMPLE = "חריגת מהירות. מהירות נוכחית 100. מותרת 70. הוֹרֵד 30 קילומטר לשעה."
+    }
+}
+
+/**
+ * Says "מהירות מותרת XX" every time the limit of the road changes during the drive (user request
+ * 2026-11-20), the first known limit included. The limit is the one where the car will be when the
+ * middle of the sentence is heard ([Ahead]), so it is said as the new limit begins, not after.
+ * A new limit is said after [CONFIRM] fixes agree, so a ramp or a crossing street beside the road
+ * on a single fix says nothing; a stretch without a known limit keeps the last one said.
+ */
+class LimitWatcher {
+    @Volatile var roads: RoadLookup? = null
+    @Volatile var timing: SpeechTiming? = null
+    private var said = 0
+    private var candidate = 0
+    private var count = 0
+
+    fun onLocation(lat: Double, lon: Double, speedKmh: Double, heading: Double?): Alert? {
+        val r = roads ?: return null
+        if (heading == null) return null
+        val m = Ahead.match(r, timing, lat, lon, speedKmh, heading, "${PREFIX}90.", BEEPS, CONFIRM_MS) ?: return null
+        if (m.limit == said) { count = 0; return null }
+        if (m.limit != candidate) { candidate = m.limit; count = 0 }
+        if (++count < CONFIRM) return null
+        said = m.limit; count = 0
+        return Alert("$PREFIX${m.limit}.", repeat = false, key = KEY)
+    }
+
+    companion object {
+        const val PREFIX = "מהירות מותרת "
+        const val KEY = "limit"
+        const val CONFIRM = 2
+        /** One beep, not the three of an alert: it is information (see [EventBeeps.forNext]). */
+        const val BEEPS = 1
+        /** The confirming fix comes up to about 2 s later (GPS every 2 s away from cameras). */
+        const val CONFIRM_MS = 2000L
     }
 }

@@ -32,21 +32,21 @@ class CameraWatcherTest {
 
     @Test fun distanceIsTheOneLeftWhenHeard() {
         // 108 km/h = 30 m/s; fix 500 ms old, 3 beeps of 300 ms, engine start 400 ms, 75 ms per unit:
-        // the opening "מצלמת מהירות בעוד " (18 units) is over after 0.5+0.9+0.4+1.35 = 3.15 s, 94.5 m on.
+        // the opening "מצלמה רגילה בעוד " (18 units) is over after 0.5+0.9+0.4+1.35 = 3.15 s, 94.5 m on.
         val w = watcher(cam).apply { timing = SpeechTiming(400.0, 75.0, 300).apply { fixAgeMs = 500 } }
-        assertEquals("מצלמת מהירות בעוד 410 מטר. מהירות נוכחית 108. מותרת 90. הוֹרֵד 18 קילומטר לשעה. קנס 250 שקלים.",
+        assertEquals("מצלמה רגילה בעוד 410 מטר. מהירות נוכחית 108. מותרת 90. הוֹרֵד 18 קילומטר לשעה. קנס 250 שקלים.",
             w.message(cam, 500.0, 108.0))
         // Near the camera the full sentence would end after it: the fine and then the speed go.
         val short = w.message(cam, 200.0, 108.0)
-        assertTrue(short, short.startsWith("מצלמת מהירות בעוד 110 מטר.") && !short.contains("קנס"))
-        assertEquals("מצלמת מהירות בעוד 10 מטר. מותרת 90. הוֹרֵד 18 קילומטר לשעה.", w.message(cam, 60.0, 108.0))
+        assertTrue(short, short.startsWith("מצלמה רגילה בעוד 110 מטר.") && !short.contains("קנס"))
+        assertEquals("מצלמה רגילה בעוד 10 מטר. מותרת 90. הוֹרֵד 18 קילומטר לשעה.", w.message(cam, 60.0, 108.0))
     }
 
     @Test fun timingLearnsFromSpokenSentences() {
         val t = SpeechTiming(400.0, 75.0)
-        repeat(30) { t.learn("מצלמת מהירות בעוד 300 מטר.", 1000, 3000) }
+        repeat(30) { t.learn("מצלמה רגילה בעוד 300 מטר.", 1000, 3000) }
         assertEquals(1000.0, t.startMs, 1.0)
-        assertEquals(3000.0 / SpeechTiming.units("מצלמת מהירות בעוד 300 מטר."), t.msPerUnit, 0.5)
+        assertEquals(3000.0 / SpeechTiming.units("מצלמה רגילה בעוד 300 מטר."), t.msPerUnit, 0.5)
     }
 
     @Test fun alertsWithCurrentSpeedFrom500MetresUntilPassed() {
@@ -54,7 +54,7 @@ class CameraWatcherTest {
         val alerts = drive(watcher(cam), 32.0000, 32.0120, 120.0)
         assertTrue(alerts.all { it.repeat })
         assertEquals(44, alerts.size)
-        assertEquals("מצלמת מהירות בעוד 480 מטר. מהירות נוכחית 120. מותרת 90. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות.",
+        assertEquals("מצלמה רגילה בעוד 480 מטר. מהירות נוכחית 120. מותרת 90. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות.",
             alerts[0].text)
         assertTrue(alerts.last().text.substringAfter("בעוד ").substringBefore(" ").toInt() <= 20)
     }
@@ -77,7 +77,7 @@ class CameraWatcherTest {
 
     @Test fun legalSpeedAnnouncesSpeedAndLimit() {
         val alerts = drive(watcher(cam), 31.9990, 32.0010, 85.0)
-        assertEquals("מצלמת מהירות בעוד 480 מטר. מהירות נוכחית 85. מותרת 90. מהירות תקינה.", alerts[0].text)
+        assertEquals("מצלמה רגילה בעוד 480 מטר. מהירות נוכחית 85. מותרת 90. מהירות תקינה.", alerts[0].text)
     }
 
     @Test fun keepsAlertingWhenStoppedNearTheCamera() {
@@ -168,16 +168,76 @@ class CameraWatcherTest {
         assertNotNull(w.onLocation(32.002, 34.8, 85.0, 0.0))
         // 50.4 is spoken "50": that is the limit, so "מהירות תקינה", not "הוֹרֵד 0" or "הוֹרֵד 1".
         assertEquals("מהירות תקינה. מותרת 50.", w.onLocation(32.002, 34.8, 50.4, 0.0)!!.text)
-        assertEquals("מצלמת מהירות בעוד 500 מטר. מהירות נוכחית 90. מותרת 90. מהירות תקינה.", watcher(cam).message(cam, 500.0, 90.4))
+        assertEquals("מצלמה רגילה בעוד 500 מטר. מהירות נוכחית 90. מותרת 90. מהירות תקינה.", watcher(cam).message(cam, 500.0, 90.4))
     }
 
-    @Test fun speedingHoldsTheLastRoadOnlyForAWhile() {
+    @Test fun speedingGoesOnInACurveWithoutTheLimit() {
+        // Field report 2026-11-20: the alert stopped in every curve (no road match) until the road was straight again.
         val roads = Roads.parse("# test\n50 1 3200000 3480000 1000 0\n")
         val w = SpeedingWatcher(penalties).apply { this.roads = roads }
         repeat(4) { w.onLocation(32.002, 34.8, 85.0, 0.0) }
-        repeat(SpeedingWatcher.HOLD_FIXES) { assertNotNull(w.onLocation(32.002, 34.9, 85.0, 0.0)) }   // no road here
-        assertNull(w.onLocation(32.002, 34.9, 85.0, 0.0))
-        assertNotNull(w.onLocation(32.002, 34.8, 85.0, 0.0))         // back on the road: still owed
+        repeat(100) { assertEquals("חריגת מהירות. מהירות נוכחית 85.", w.onLocation(32.002, 34.9, 85.0, 0.0)!!.text) }   // no road here
+        assertEquals("חריגת מהירות. מהירות נוכחית 85.", w.onLocation(32.002, 34.8, 85.0, 45.0)!!.text)   // across the road: no match
+        assertTrue(w.onLocation(32.002, 34.8, 85.0, 0.0)!!.text.contains("מותרת 50."))   // back on the road: the limit again
+        assertEquals("חריגת מהירות. מהירות נוכחית 55.", w.onLocation(32.002, 34.9, 55.0, 0.0)!!.text)   // still over the last limit
+        val ok = w.onLocation(32.002, 34.9, 50.0, 0.0)!!
+        assertEquals(CameraWatcher.OK, ok.text)                      // the closing sentence, without the limit
+        assertTrue(!ok.repeat)
+        assertNull(w.onLocation(32.002, 34.9, 50.0, 0.0))
+    }
+
+    @Test fun speedingJudgesTheRoadWhereTheSentenceIsHeard() {
+        // 50 from lat 32.0000 to 32.0100, then 90 to 32.0300; at 90 km/h the middle of the sentence is about 100 m on.
+        val roads = Roads.parse("# test\n50 1 3200000 3480000 1000 0\n90 0 3201000 3480000 2000 0\n")
+        val t = SpeechTiming(startMs = 400.0, msPerUnit = 75.0)
+        val w = SpeedingWatcher(penalties).apply { this.roads = roads; timing = t }
+        repeat(5) { assertNull(w.onLocation(32.0095, 34.8, 90.0, 0.0)) }   // 40 over 50 here, but heard on the 90 road
+        val early = SpeedingWatcher(penalties).apply { this.roads = roads }
+        repeat(2) { early.onLocation(32.0095, 34.8, 90.0, 0.0) }
+        assertNotNull(early.onLocation(32.0095, 34.8, 90.0, 0.0))          // without timing: the road under the car
+    }
+
+    @Test fun limitIsSaidAtEveryChange() {
+        val roads = Roads.parse("# test\n50 1 3200000 3480000 1000 0\n90 0 3201000 3480000 2000 0\n")
+        val w = LimitWatcher().apply { this.roads = roads }
+        assertNull(w.onLocation(32.002, 34.8, 50.0, 0.0))                  // first fix: confirming
+        assertEquals("מהירות מותרת 50.", w.onLocation(32.0021, 34.8, 50.0, 0.0)!!.text)
+        assertNull(w.onLocation(32.0022, 34.8, 50.0, 0.0))                 // said once
+        assertNull(w.onLocation(32.012, 34.9, 50.0, 0.0))                  // no road: keeps the last limit
+        assertNull(w.onLocation(32.012, 34.8, 80.0, 0.0))                  // 90 road: confirming
+        val a = w.onLocation(32.0121, 34.8, 80.0, 0.0)!!
+        assertEquals("מהירות מותרת 90.", a.text)
+        assertTrue(!a.repeat)
+        assertNull(w.onLocation(32.0122, 34.8, 80.0, null))                // standing still: nothing
+    }
+
+    @Test fun limitIsSaidBeforeTheChangeSoItsMiddleIsHeardThere() {
+        val roads = Roads.parse("# test\n50 1 3200000 3480000 1000 0\n90 0 3201000 3480000 2000 0\n")
+        val w = LimitWatcher().apply { this.roads = roads; timing = SpeechTiming(startMs = 400.0, msPerUnit = 75.0) }
+        // 100 km/h; the sentence starts about 1 s after the fix and its middle is heard about 1 s later,
+        // the confirming fix comes 2 s later: the change at 32.0100 is announced some 100 m before it.
+        var said: Double? = null
+        var lat = 32.0050
+        while (lat < 32.0100 && said == null) {
+            if (w.onLocation(lat, 34.8, 100.0, 0.0)?.text == "מהירות מותרת 90.") said = lat
+            lat += 0.0001
+        }
+        assertNotNull(said)
+        assertTrue("$said", said!! < 32.0095)
+    }
+
+    @Test fun limitChangeHasOneBeepAndLeavesTheEventOpen() {
+        val b = EventBeeps()
+        assertEquals(3, b.forNext(Alert("x", repeat = true, key = SpeedingWatcher.KEY), 0))
+        assertEquals(1, b.forNext(Alert("מהירות מותרת 90.", repeat = false, key = LimitWatcher.KEY), 500))
+        assertEquals(1, b.forNext(Alert("x", repeat = true, key = SpeedingWatcher.KEY), 1000))
+    }
+
+    @Test fun regularAndAverageCamerasAreNamed() {
+        val avg = cam.copy(kind = Camera.Kind.AVERAGE)
+        assertTrue(watcher(avg).message(avg, 500.0, 80.0).startsWith("מצלמת ממוצע בעוד 500 מטר."))
+        assertTrue(watcher(cam).message(cam, 500.0, 80.0).startsWith("מצלמה רגילה בעוד 500 מטר."))
+        assertTrue(drive(watcher(avg), 32.0000, 32.0040, 80.0).isNotEmpty())   // announced from 500 m like a speed camera
     }
 
     @Test fun beepsThreeThenOneUntilTheEventEnds() {

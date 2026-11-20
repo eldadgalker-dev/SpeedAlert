@@ -20,6 +20,8 @@ class EventBeeps {
     }
 
     fun forNext(next: Alert, nowMs: Long): Int {
+        // A change of the speed limit is information, not an alert: one beep, and the event under way stays open.
+        if (next.key == LimitWatcher.KEY) return LimitWatcher.BEEPS
         val same = next.key != null && next.key == key
         key = when {
             next.repeat -> next.key

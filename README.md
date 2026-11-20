@@ -47,13 +47,22 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 - A camera counts only when it is ahead (within 35° of the heading) and not facing across the road.
 - Speed camera: from 500 m before it the alert repeats without a break, with the current
   distance and speed, until the camera is passed (also while stopped near it):
-  "מצלמת מהירות בעוד 480 מטר. מהירות נוכחית 120. מותרת 90. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות."
+  "מצלמה רגילה בעוד 480 מטר. מהירות נוכחית 120. מותרת 90. הוֹרֵד 30 קילומטר לשעה. קנס 750 שקלים ועוד 8 נקודות."
   The distance said is the one left when the number is heard (speed, fix age, beeps and speech time);
   near the camera the sentence shortens: first the fine and points drop, then the current speed.
 - Red-light camera: from 300 m before it, repeated until it is passed or the car stops (below 5 km/h):
   "מצלמת רמזור בעוד 280 מטר."
 - Within the limit every message ends with "מהירות תקינה."; after speeding without a camera,
   "מהירות תקינה. מותרת 50." is said once on getting back within the limit.
+- The camera kind is said: "מצלמה רגילה" (spot speed camera), "מצלמת ממוצע" (camera of an
+  average-speed section, from 500 m like a speed camera) or "מצלמת רמזור".
+- Speeding without a camera goes on where the road is not matched (curves, junctions), without
+  the limit ("חריגת מהירות. מהירות נוכחית 95."), until the speed is back within the last limit
+  and "מהירות תקינה." is said (field report 2026-11-20).
+- Every change of the road limit during the drive is said once with one beep: "מהירות מותרת 90."
+- Timing: the limit for these messages is the one where the car will be when the middle of the
+  sentence is heard (fix age, beeps, speech start and pace, the confirming fix), so a change is
+  said before it, and a speeding alert is not given for a limit the car will have left by then.
 - Bus-lane enforcement (Ministry of Transport sections on roads 4, 5, 443, 461, 471): once when
   entering a section: "אכיפת נתיב תחבורה ציבורית בכביש 443. אסור לנסוע בנתיב התחבורה הציבורית."
 - Urban bus lanes with enforcement cameras (data.gov.il): once at the start of the lane, only along its
@@ -90,7 +99,7 @@ red-light cameras, bus-lane enforcement and speeding in Israel.
 
 | File | Content | Source |
 |---|---|---|
-| `cameras.json` | Speed and red-light cameras: position, kind, speed limit, direction, urban flag | OpenStreetMap (ODbL) via Overpass; `tools/fetch_cameras.py` |
+| `cameras.json` | Speed and red-light cameras: position, kind, speed limit, direction, urban flag | OpenStreetMap (ODbL) via Overpass, and the mitsu.co.il camera map (מיצו בדרכים; active speed, red-light-and-speed, rail-crossing and average-speed sites; replaces OSM cameras within 60 m); `tools/fetch_cameras.py` |
 | `roads/` | `roads.txt` split into 0.1° tiles plus `index.txt` (name, sha256, bytes) by `tools/tile_roads.py`; the app keeps only the tiles around the car (none while idle), downloads the index on each data check and a changed tile only when the car comes near it | Built from `roads.txt` by the weekly workflow |
 | `roads.txt`, `roads.version` | Speed limit per road segment (not packed in the APK) (OSM `maxspeed`; untagged residential = 50; untagged main roads = 0, unknown, which blocks the match; the highest limit among parallel roads within 20 m wins; an untagged ramp is left out; `data/sign_overrides.json` holds limits read from signs the user photographed, applied from the sign onward), sha256 | OpenStreetMap via Overpass; `tools/fetch_roads.py`, weekly `.github/workflows/roads.yml` |
 | `buslanes.json` | `sections`: interurban bus-lane enforcement (both ends), manual; `lanes`: urban lanes with cameras, one way, with hours, weekly (Tuesday) by `tools/fetch_buslanes.py` | Ministry of Transport, gov.il/he/pages/citizen_cameras; data.gov.il dataset nataz_kayam (CC-BY) |
