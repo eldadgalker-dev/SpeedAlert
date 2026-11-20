@@ -51,6 +51,7 @@ class MainActivity : Activity() {
     private lateinit var alertCard: LinearLayout
     private lateinit var toggle: Button
     private lateinit var modeButton: Button
+    private lateinit var updateButton: Button
     private lateinit var updateView: TextView
     private val info = mutableMapOf<String, TextView>()
     private val notes = mutableMapOf<String, TextView>()
@@ -150,8 +151,8 @@ class MainActivity : Activity() {
             addView(button(getString(R.string.test_voice), pal.card, pal.text, 15f) {
                 withPermissions { AlertService.start(this@MainActivity, AlertService.ACTION_TEST) }
             }, LinearLayout.LayoutParams(0, px(52), 1f).apply { marginEnd = px(8) })
-            addView(button(getString(R.string.check_update), pal.card, pal.text, 15f) { checkAppUpdate() },
-                LinearLayout.LayoutParams(0, px(52), 1f))
+            updateButton = button(getString(R.string.check_update), pal.card, pal.text, 15f) { checkAppUpdate() }
+            addView(updateButton, LinearLayout.LayoutParams(0, px(52), 1f))
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = px(10) })
         // Beeps only / beeps and sentence, reset, full shut-down (user request 2026-11-08).
         modeButton = button("", pal.card, pal.text, 15f) {
@@ -161,6 +162,7 @@ class MainActivity : Activity() {
         body.addView(LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             addView(button("איפוס", pal.card, pal.text, 15f) {
+                android.widget.Toast.makeText(this@MainActivity, "מאפס את השירות…", android.widget.Toast.LENGTH_SHORT).show()
                 withPermissions { AlertService.restart(this@MainActivity) }
             }, LinearLayout.LayoutParams(0, px(52), 1f).apply { marginEnd = px(8) })
             addView(button("כיבוי מלא", pal.card, RED, 15f) {
@@ -235,7 +237,12 @@ class MainActivity : Activity() {
         alertView.text = AlertService.lastAlert
         alertCard.visibility = if (AlertService.lastAlert.isEmpty()) View.GONE else View.VISIBLE
         toggle.text = getString(if (running) R.string.stop else R.string.start)
-        toggle.background = round(if (running) RED else GREEN, 14)
+        toggle.background = pressable(if (running) RED else GREEN, Color.WHITE)
+        // While the check or the download runs, the button itself says so and takes no tap (user request 2026-11-20).
+        val busy = updating
+        updateButton.text = if (busy) updateText.ifEmpty { getString(R.string.update_checking) } else getString(R.string.check_update)
+        updateButton.isEnabled = !busy
+        updateButton.alpha = if (busy) 0.6f else 1f
         modeButton.text = if (AlertService.beepsOnly) "מצב: צפצופים בלבד (החלף להודעות)" else "מצב: צפצופים והודעות (החלף לצפצופים בלבד)"
         // A new version waiting stands out (user request 2026-11-09); progress lines stay quiet.
         val newer0 = AppUpdate.available
@@ -492,13 +499,25 @@ class MainActivity : Activity() {
         layoutParams = LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = px(12) }
     }
 
+    /**
+     * Every button shows that it was pressed (user request 2026-11-20: "לא ברור שהלחיצה התקבלה"): a
+     * ripple over its colour and a short vibration on the tap; long actions also say so on the button.
+     */
     private fun button(label: String, bg: Int, fg: Int, size: Float, onClick: () -> Unit) = Button(this).apply {
         text = label; textSize = size; setTextColor(fg); isAllCaps = false
         setTypeface(typeface, Typeface.BOLD)
-        background = round(bg, 14, if (bg == pal.card) pal.line else null)
+        background = pressable(bg, fg)
         stateListAnimator = null
-        setOnClickListener { onClick() }
+        isHapticFeedbackEnabled = true
+        setOnClickListener {
+            performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY)
+            onClick()
+        }
     }
+
+    private fun pressable(bg: Int, fg: Int) = android.graphics.drawable.RippleDrawable(
+        android.content.res.ColorStateList.valueOf((fg and 0x00FFFFFF) or 0x44000000),
+        round(bg, 14, if (bg == pal.card) pal.line else null), round(Color.WHITE, 14))
 
     /**
      * One table row (user request 2026-10-29): the label at the start and a short value at the
@@ -608,6 +627,7 @@ class MainActivity : Activity() {
         }
         updateText = getString(R.string.update_checking)
         updating = true
+        render()   // the button says "בודק עדכון…" at once, not at the next refresh
         Thread {
             updateText = try {
                 val remote = AppUpdate.check()
@@ -623,6 +643,7 @@ class MainActivity : Activity() {
                 getString(R.string.update_failed, e.message ?: e.javaClass.simpleName)
             } finally {
                 updating = false
+                ui.post { render() }
             }
         }.start()
     }
