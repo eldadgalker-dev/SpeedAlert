@@ -1,6 +1,6 @@
 {
  "source": "OpenStreetMap contributors (ODbL), via Overpass API; mitsu.co.il camera map (מיצו בדרכים)",
- "fetched": "2026-11-20",
+ "fetched": "2026-11-22",
  "count": 296,
  "cameras": [
   {
@@ -634,10 +634,10 @@
    "id": 3258018465,
    "lat": 32.14363,
    "lon": 34.894479,
-   "limit": 50,
-   "limitSource": "road",
+   "limit": null,
+   "limitSource": null,
    "direction": null,
-   "urban": true,
+   "urban": false,
    "kind": "speed",
    "name": null
   },
